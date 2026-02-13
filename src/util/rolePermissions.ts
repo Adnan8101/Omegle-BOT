@@ -6,7 +6,7 @@ export type RoleType = 'srmod' | 'mod' | 'staff';
 export type ModAction = 
     // Standard actions
     | 'ban' | 'kick' | 'mute' | 'unmute' | 'warn' | 'unban' | 'purge' | 'clear'
-    | 'lock' | 'unlock' | 'hide' | 'unhide' | 'move' | 'movevc' | 'ad' | 'autodrag'
+    | 'lock' | 'unlock' | 'hide' | 'unhide' | 'move' | 'ad' | 'autodrag'
     | 'reason' | 'modlogs' | 'whois' | 'av'
     // Exclusive Sr Mod actions
     | 'caseinfo' | 'delcase' | 'banword' | 'checkperms' | 'dm' 
@@ -23,7 +23,7 @@ const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
     srmod: [
         // Standard moderation
         'ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
-        'lock', 'unlock', 'hide', 'unhide', 'move', 'movevc', 'ad', 'autodrag',
+        'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
         'reason', 'modlogs', 'whois', 'av',
         // Exclusive commands
         'caseinfo', 'delcase', 'banword', 'checkperms', 'dm',
@@ -32,12 +32,12 @@ const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
     ],
     mod: [
         'ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
-        'lock', 'unlock', 'hide', 'unhide', 'move', 'movevc', 'ad', 'autodrag',
+        'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
         'reason', 'modlogs', 'whois', 'av'
     ],
     staff: [
         'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
-        'lock', 'unlock', 'hide', 'unhide', 'move', 'movevc', 'ad', 'autodrag',
+        'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
         'reason', 'modlogs', 'whois', 'av'
     ]
 };

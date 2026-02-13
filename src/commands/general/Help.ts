@@ -98,7 +98,7 @@ export const Help = async (ctx: Context, args: string[]) => {
     // Moderator Utils Commands
     embed.addFields({
         name: '**Moderator Utils Commands**',
-        value: '`!reason`, `!whois`, `!av`, `!banword`, `!checkperms`, `!dm`, `!move`, `!movevc`, `!vclogs`, `!clogs`, `!wv`',
+        value: '`!reason`, `!whois`, `!av`, `!banword`, `!checkperms`, `!dm`, `!move`, `!vclogs`, `!clogs`, `!wv`',
         inline: false
     });
 

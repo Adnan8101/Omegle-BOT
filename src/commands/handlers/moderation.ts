@@ -50,10 +50,6 @@ export async function handleModerationCommand(interaction: ChatInputCommandInter
         if (channelOption) args.push(channelOption.id);
     }
     else if (cmd === 'move') {
-        if (messageOption) args.push(messageOption);
-        if (channelOption) args.push(channelOption.id);
-    }
-    else if (cmd === 'movevc') {
         if (userOption) args.push(userOption.id);
         if (channelOption) args.push(channelOption.id);
     }

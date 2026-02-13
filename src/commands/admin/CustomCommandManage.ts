@@ -92,7 +92,7 @@ export const CustomCommandManage: Command = {
             }
 
             // Check if command name conflicts with existing commands
-            const reservedNames = ['cc', 'help', 'ban', 'kick', 'mute', 'warn', 'role', 'roleadd', 'roleremove', 'inrole', 'sticky', 'afk', 'setup'];
+            const reservedNames = ['cc', 'help', 'ban', 'kick', 'mute', 'warn', 'role', 'inrole', 'sticky', 'afk', 'setup'];
             if (reservedNames.includes(commandName)) {
                 const embed = new EmbedBuilder()
                     .setDescription(`<:cross:1469273232929456314> The name **${commandName}** is reserved and cannot be used.`);

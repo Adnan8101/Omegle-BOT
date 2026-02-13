@@ -4,7 +4,7 @@ import { db } from '../../data/db';
 export type ModLogAction =
     | 'Ban' | 'Unban' | 'Kick' | 'Warn' | 'Mute' | 'Unmute'
     | 'Purge' | 'Lock' | 'Unlock' | 'Hide' | 'Unhide'
-    | 'Move' | 'MoveVC' | 'Role' | 'Suggestion'
+    | 'Move' | 'Role' | 'Suggestion'
     | 'DelCase' | 'BanWord' | 'DM';
 
 export class ModLogger {
@@ -26,17 +26,29 @@ export class ModLogger {
         }
     ) {
         try {
+            console.log(`[ModLogger] Attempting to log action: ${action} by ${actor.tag} in guild ${guild.name}`);
+            
             // Fetch config
             // @ts-ignore - modConfig is generated
             const config = await db.modConfig.findUnique({
                 where: { guild_id: guild.id }
             });
 
-            if (!config || !config.log_channel_id) return;
+            console.log(`[ModLogger] Config found:`, config ? `Channel ID: ${config.log_channel_id}` : 'No config found');
+
+            if (!config || !config.log_channel_id) {
+                console.log(`[ModLogger] No mod log channel configured for guild ${guild.name}`);
+                return;
+            }
 
             const channel = guild.channels.cache.get(config.log_channel_id) as TextChannel;
-            if (!channel) return;
+            if (!channel) {
+                console.log(`[ModLogger] Channel ${config.log_channel_id} not found in guild ${guild.name}`);
+                return;
+            }
 
+            console.log(`[ModLogger] Found log channel: #${channel.name}`);
+            
             const targetName = typeof target === 'string' ? target : `${target.tag} (${target.id})`;
             const targetAvatar = typeof target === 'string' ? null : target.displayAvatarURL();
 
@@ -81,9 +93,10 @@ export class ModLogger {
             }
 
             await channel.send({ embeds: [embed] });
+            console.log(`[ModLogger] Successfully logged ${action} to #${channel.name}`);
 
         } catch (error) {
-            console.error('Failed to send mod log:', error);
+            console.error('[ModLogger] Failed to send mod log:', error);
         }
     }
 }

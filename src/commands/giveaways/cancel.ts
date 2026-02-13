@@ -9,7 +9,7 @@ export default {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addStringOption(option => option.setName('message_id').setDescription('The message ID of the giveaway').setRequired(true)),
     async execute(interaction: ChatInputCommandInteraction) {
-        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         if (!await hasGiveawayPermissions(interaction)) {
             return;
         }
@@ -27,20 +27,44 @@ export default {
         }
     },
     async prefixRun(message: any, args: string[]) {
-        if (!message.member?.permissions.has('ManageGuild')) {
-            return;
+        console.log(`[Giveaway] Prefix cancel command executed by ${message.author?.tag || 'unknown'} with args: ${args}`);
+        
+        if (!message.member?.permissions?.has?.('ManageGuild')) {
+            console.log(`[Giveaway] Prefix cancel command - permission denied for ${message.author?.tag}`);
+            return message.reply(`${Emojis.CROSS} You need Manage Guild permission to use this command.`).catch(console.error);
         }
-        if (args.length === 0) return message.reply(`${Emojis.CROSS} Usage: \`!gcancel <message_id>\``);
+        
+        if (args.length === 0) {
+            return message.reply(`${Emojis.CROSS} Usage: \`!gcancel <message_id>\``).catch(console.error);
+        }
+        
+        // Validate message ID format
+        if (!/^\d{17,19}$/.test(args[0])) {
+            return message.reply(`${Emojis.CROSS} Invalid message ID format. Please provide a valid Discord message ID.`).catch(console.error);
+        }
+        
         try {
+            console.log(`[Giveaway] Attempting to cancel giveaway with message ID: ${args[0]}`);
             const service = new GiveawayService(message.client);
             await service.cancelGiveaway(args[0]);
-            const reply = await message.reply(`${Emojis.TICK} Giveaway cancelled.`);
+            console.log(`[Giveaway] Giveaway ${args[0]} cancelled successfully`);
+            
+            const reply = await message.reply(`${Emojis.TICK} Giveaway cancelled.`).catch((err: any) => {
+                console.error(`[Giveaway] Failed to reply to cancel message:`, err);
+                // Try alternative reply
+                if (message.channel && message.channel.send) {
+                    return message.channel.send(`${Emojis.TICK} Giveaway cancelled.`);
+                }
+                throw err;
+            });
+            
             setTimeout(() => {
                 message.delete?.().catch(() => { });
                 reply.delete?.().catch(() => { });
             }, 3000);
         } catch (error: any) {
-            await message.reply(`${Emojis.CROSS} ${error.message}`);
+            console.error(`[Giveaway] Error cancelling giveaway ${args[0]}:`, error);
+            await message.reply(`${Emojis.CROSS} ${error.message || 'Failed to cancel giveaway. Please check the message ID.'}`).catch(console.error);
         }
     }
 };

@@ -27,7 +27,6 @@ import { Unlock } from './moderation/Unlock';
 import { Hide } from './moderation/Hide';
 import { Unhide } from './moderation/Unhide';
 import { Move } from './moderation/Move';
-import { MoveVc } from './moderation/MoveVc';
 import { Purge } from './moderation/Purge';
 import { RoleCommand } from './moderation/Role';
 import { InRole } from './moderation/InRole';
@@ -95,7 +94,7 @@ export const CommandRegistry: Record<string, Command> = {
     'hide': Hide,
     'unhide': Unhide,
     'move': Move,
-    'movevc': MoveVc,
+    'mv': Move,
     'purge': Purge,
     'clear': Purge,
     'role': RoleCommand,

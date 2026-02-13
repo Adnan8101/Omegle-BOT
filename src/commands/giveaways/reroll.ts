@@ -16,10 +16,22 @@ export default {
         await this.run(interaction, interaction.options.getString('message_id', true));
     },
     async prefixRun(message: any, args: string[]) {
-        if (!message.member?.permissions.has(PermissionFlagsBits.ManageGuild)) {
-            return;
+        console.log(`[Giveaway] Prefix reroll command executed by ${message.author?.tag || 'unknown'} with args: ${args}`);
+        
+        if (!message.member?.permissions?.has?.('ManageGuild')) {
+            console.log(`[Giveaway] Prefix reroll command - permission denied for ${message.author?.tag}`);
+            return message.reply(`${Emojis.CROSS} You need Manage Guild permission to use this command.`).catch(console.error);
         }
-        if (args.length < 1) return message.reply(`${Emojis.CROSS} Usage: \`!greroll <message_id>\``);
+        
+        if (args.length < 1) {
+            return message.reply(`${Emojis.CROSS} Usage: \`!greroll <message_id>\``).catch(console.error);
+        }
+        
+        // Validate message ID format
+        if (!/^\d{17,19}$/.test(args[0])) {
+            return message.reply(`${Emojis.CROSS} Invalid message ID format. Please provide a valid Discord message ID.`).catch(console.error);
+        }
+        
         await this.run(message, args[0]);
     },
     async run(ctx: any, messageId: string) {

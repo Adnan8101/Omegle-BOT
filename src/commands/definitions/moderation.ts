@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, ChannelType } from 'discord.js';
 
 export const banCommand = new SlashCommandBuilder()
     .setName('ban')
@@ -148,17 +148,15 @@ export const unhideCommand = new SlashCommandBuilder()
 
 export const moveCommand = new SlashCommandBuilder()
     .setName('move')
-    .setDescription('Move a message to another channel')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
-    .addStringOption(opt => opt.setName('messageid').setDescription('Message ID').setRequired(true))
-    .addChannelOption(opt => opt.setName('channel').setDescription('Target channel').setRequired(true));
-
-export const movevcCommand = new SlashCommandBuilder()
-    .setName('movevc')
     .setDescription('Move a user to another voice channel')
     .setDefaultMemberPermissions(PermissionFlagsBits.MoveMembers)
     .addUserOption(opt => opt.setName('user').setDescription('User to move').setRequired(true))
-    .addChannelOption(opt => opt.setName('channel').setDescription('Target voice channel').setRequired(true));
+    .addChannelOption(opt => 
+        opt.setName('channel')
+           .setDescription('Target voice channel')
+           .addChannelTypes(ChannelType.GuildVoice, ChannelType.GuildStageVoice)
+           .setRequired(false)
+    );
 
 export const roleCommand = new SlashCommandBuilder()
     .setName('role')
@@ -231,5 +229,5 @@ export const modCommands = [
     banCommand, kickCommand, muteCommand, unmuteCommand, warnCommand, unbanCommand, reasonCommand,
     delcaseCommand, modleaderboardCommand, modlogsCommand, modstatsCommand, whoisCommand, caseinfoCommand,
     avCommand, banwordCommand, checkpermsCommand, dmCommand, lockCommand, unlockCommand, hideCommand, unhideCommand,
-    moveCommand, movevcCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand
+    moveCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand
 ];
