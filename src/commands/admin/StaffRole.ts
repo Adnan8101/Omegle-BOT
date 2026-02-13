@@ -38,7 +38,8 @@ export const StaffRole: Command = {
                     '`staffrole add <role>` - Add staff role\n' +
                     '`staffrole show` - List staff roles\n' +
                     '`staffrole remove <role>` - Remove staff role\n\n' +
-                    '*Staff can: kick, mute*'
+                    '*Staff can: kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av*\n' +
+                    '*Staff cannot: ban, unban, or use exclusive Sr Mod commands*'
                 );
             await ctx.reply({ embeds: [embed] });
             return;
@@ -64,7 +65,7 @@ export const StaffRole: Command = {
                 const embed = new EmbedBuilder()
                     .setDescription(
                         `${TICK} **Staff Roles**\n\n${roleList}\n\n` +
-                        `*Can use: kick, mute*`
+                        `*Can use: kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av*`
                     );
 
                 await ctx.reply({ embeds: [embed] });

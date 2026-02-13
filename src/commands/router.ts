@@ -26,7 +26,7 @@ const moderationCommands = ['ban', 'kick', 'mute', 'unmute', 'warn', 'unban', 'r
 const afkCommands = ['afk', 'afkclear', 'afklist', 'afksettings'];
 const mailCommands = ['openmail', 'close', 'claim', 'unclaim', 'ticketpanel',
     'claimedtickets', 'inactivemails', 'ticketclear'];
-const adminCommands = ['setupmail', 'deletesetup', 'cc', 'modrole', 'staffrole',
+const adminCommands = ['setupmail', 'deletesetup', 'cc', 'modrole', 'staffrole', 'srmodrole',
     'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig'];
 const utilityCommands = ['vclogs', 'clogs', 'wv', 'help'];
 const giveawayCommandNames = ['gcreate', 'gstart', 'gend', 'greroll', 'gcancel',

@@ -38,7 +38,8 @@ export const ModRole: Command = {
                     '`modrole add <role>` - Add mod role\n' +
                     '`modrole show` - List mod roles\n' +
                     '`modrole remove <role>` - Remove mod role\n\n' +
-                    '*Mods can: ban, kick, mute, warn*'
+                    '*Mods can: All standard moderation (ban, unban, kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av)*\n' +
+                    '*Mods cannot: Use exclusive Sr Mod commands (caseinfo, delcase, banword, checkperms, dm, modleaderboard, modstats, role, inrole, suggestion)*'
                 );
             await ctx.reply({ embeds: [embed] });
             return;
@@ -64,7 +65,7 @@ export const ModRole: Command = {
                 const embed = new EmbedBuilder()
                     .setDescription(
                         `${TICK} **Moderator Roles**\n\n${roleList}\n\n` +
-                        `*Can use: ban, kick, mute, warn*`
+                        `*Can use: All standard moderation commands (ban, unban, kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av)*`
                     );
 
                 await ctx.reply({ embeds: [embed] });

@@ -38,7 +38,8 @@ export const SrModRole: Command = {
                     '`srmodrole add <role>` - Add senior mod role\n' +
                     '`srmodrole show` - List senior mod roles\n' +
                     '`srmodrole remove <role>` - Remove senior mod role\n\n' +
-                    '*Sr Mods have full access to all moderation commands.*'
+                    '*Sr Mods have full access to all standard + exclusive moderation commands.*\n' +
+                    '*Exclusive: caseinfo, delcase, banword, checkperms, dm, modleaderboard, modstats, role, inrole, suggestion*'
                 );
             await ctx.reply({ embeds: [embed] });
             return;
@@ -64,7 +65,9 @@ export const SrModRole: Command = {
                 const embed = new EmbedBuilder()
                     .setDescription(
                         `${TICK} **Senior Moderator Roles**\n\n${roleList}\n\n` +
-                        `*Access to: All moderation commands*`
+                        `*Full access to all moderation commands including exclusive commands:*\n` +
+                        `*Standard: ban, unban, kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av*\n` +
+                        `*Exclusive: caseinfo, delcase, banword, checkperms, dm, modleaderboard, modstats, role, inrole, suggestion*`
                     );
 
                 await ctx.reply({ embeds: [embed] });
