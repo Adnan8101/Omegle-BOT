@@ -110,7 +110,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             const roleMentions = state.staffRoles.map(r => `<@&${r}>`).join(', ');
             const embed = new EmbedBuilder()
-                .setColor(0x57F287)
+                
                 .setTitle('<:tickYes:1469272837192814623> Setup Saved Successfully')
                 .setDescription(
                     `**Configuration:**\n` +

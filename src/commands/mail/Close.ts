@@ -40,7 +40,7 @@ export const Close: Command = {
             if (tChannel) {
                 const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
                 const transcriptEmbed = new EmbedBuilder()
-                    .setColor(0x2B2D31)
+                    
                     .setDescription(
                         `${TICK} **Ticket Closed**\n\n` +
                         `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +

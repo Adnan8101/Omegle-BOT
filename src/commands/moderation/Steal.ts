@@ -127,7 +127,7 @@ export const Steal: Command = {
         const embed = new EmbedBuilder()
             .setTitle('Steal Results')
             .setDescription(results.join('\n'))
-            .setColor(failCount === 0 ? 0x57F287 : successCount === 0 ? 0xED4245 : 0xFEE75C)
+            
             .setFooter({ text: `${successCount} added • ${failCount} failed` })
             .setTimestamp();
 

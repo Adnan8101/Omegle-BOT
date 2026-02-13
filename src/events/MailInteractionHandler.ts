@@ -76,7 +76,7 @@ async function buildTicketEmbed(
     }
 
     const embed = new EmbedBuilder()
-        .setColor(0x2B2D31)
+        
         .setAuthor({
             name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
             iconURL: user?.displayAvatarURL() || undefined
@@ -337,7 +337,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             if (tChannel) {
                 const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
                 const transcriptEmbed = new EmbedBuilder()
-                    .setColor(0x2B2D31)
+                    
                     .setDescription(
                         `${TICK} **Ticket Closed**\n\n` +
                         `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +
@@ -448,7 +448,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             });
 
             const embed = new EmbedBuilder()
-                .setColor(0x2B2D31)
+                
                 .setAuthor({ name: `VC Logs | ${targetUser?.username || targetId}`, iconURL: targetUser?.displayAvatarURL() })
                 .setDescription(lines.join('\n'))
                 .setFooter({ text: `Showing last ${logs.length} sessions` })

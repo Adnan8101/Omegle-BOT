@@ -122,7 +122,7 @@ export const SuggestionManage: Command = {
                     })
                     .setTitle(`Suggestion #${suggestionNumber}`)
                     .setDescription(suggestion.suggestion)
-                    .setColor(statusColors[newStatus] ?? 0x2B2D31)
+                    
                     .addFields({ name: 'Status', value: `${statusEmoji[newStatus]} **${newStatus.toUpperCase()}**`, inline: true })
                     .setFooter({ text: `Reviewed by ${interaction.user.username}` })
                     .setTimestamp();
