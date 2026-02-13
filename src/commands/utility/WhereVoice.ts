@@ -3,7 +3,6 @@ import { Command } from '../../core/command';
 import { Context } from '../../core/context';
 import { db } from '../../data/db';
 import { Resolver } from '../../util/Resolver';
-import { manageWvAllowedRole } from '../admin/WvAllowedRole';
 
 export const WhereVoice: Command = {
     name: 'wv',
@@ -14,13 +13,7 @@ export const WhereVoice: Command = {
     permissions: [],
     execute: async (ctx: Context, args: string[]): Promise<void> => {
         await ctx.defer();
-
-        // Handle allowed role management
-        if (args[0]?.toLowerCase() === 'allowed') {
-            await manageWvAllowedRole(ctx, args.slice(1));
-            return;
-        }
-
+        
         const guild = ctx.inner.guild;
         if (!guild) return;
 
@@ -32,21 +25,22 @@ export const WhereVoice: Command = {
         });
 
         const memberRoles = Array.from(member.roles instanceof Map ? member.roles.keys() : (member.roles as any).cache.keys());
-
+        
         // Check if user has moderator/admin permissions
-        const hasModerationPerms = typeof member.permissions === 'string'
-            ? false
-            : (member.permissions.has(PermissionFlagsBits.ModerateMembers) ||
-                member.permissions.has(PermissionFlagsBits.Administrator));
-
+        const hasModerationPerms = typeof member.permissions === 'string' 
+            ? false 
+            : (member.permissions.has(PermissionFlagsBits.ModerateMembers) || 
+               member.permissions.has(PermissionFlagsBits.Administrator));
+        
         // If no roles configured, only moderators can use it
         // If roles configured, check if user has one of those roles OR is a moderator
-        const hasAllowedRole = allowedRoles.length === 0
-            ? hasModerationPerms
+        const hasAllowedRole = allowedRoles.length === 0 
+            ? hasModerationPerms 
             : (allowedRoles.some((ar: any) => memberRoles.includes(ar.role_id)) || hasModerationPerms);
 
         // Check permission
         if (!hasAllowedRole) {
+            await ctx.reply('❌ You do not have permission to use this command.');
             return;
         }
 

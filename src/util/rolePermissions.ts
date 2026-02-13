@@ -1,141 +1,90 @@
 import { db } from '../data/db';
 import { GuildMember, APIInteractionGuildMember, PermissionFlagsBits } from 'discord.js';
+import { hasPermission } from './permissions';
 
-export type RoleType = 'mod' | 'staff' | 'srmod';
-
-export type ModAction =
-    | 'ban' | 'kick' | 'mute' | 'unmute' | 'warn' | 'unban'
-    | 'purge' | 'reason' | 'delcase' | 'modleaderboard'
-    | 'modlogs' | 'modstats' | 'whois' | 'caseinfo'
-    | 'av' | 'banword' | 'checkperms' | 'dm'
-    | 'lock' | 'unlock' | 'hide' | 'unhide'
-    | 'move' | 'movevc' | 'role' | 'inrole'
-    | 'ad' | 'autodrag' | 'suggestion';
+export type RoleType = 'mod' | 'staff';
+export type ModAction = 'ban' | 'kick' | 'mute' | 'unmute' | 'warn' | 'unban';
 
 /**
  * Permission mapping for each role type
  */
-export const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
-    // SrMod has access to EVERYTHING
-    srmod: [
-        'ban', 'kick', 'mute', 'unmute', 'warn', 'unban', 'purge', 'reason', 'delcase',
-        'modleaderboard', 'modlogs', 'modstats', 'whois', 'caseinfo', 'av', 'banword',
-        'checkperms', 'dm', 'lock', 'unlock', 'hide', 'unhide', 'move', 'movevc', 'role',
-        'inrole', 'ad', 'autodrag', 'suggestion'
-    ],
-    // Mod has restricted access (removed: lock, unlock, hide, unhide, caseinfo, banword, checkperms, delcase, dm, modleaderboard, modstats, role, suggestion)
-    mod: [
-        'ban', 'kick', 'mute', 'unmute', 'warn', 'unban', 'purge', 'reason',
-        'modlogs', 'whois', 'av',
-        'move', 'movevc', 'inrole',
-        'ad', 'autodrag'
-    ],
-    // Staff has further restricted access (no ban/unban + same restrictions as mod)
-    staff: [
-        'kick', 'mute', 'unmute', 'warn', 'purge', 'reason',
-        'modlogs', 'whois', 'av',
-        'move', 'movevc', 'inrole',
-        'ad', 'autodrag'
-    ]
+const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
+    mod: ['ban', 'kick', 'mute', 'unmute', 'warn', 'unban'],
+    staff: ['kick', 'mute', 'unmute']
 };
 
 /**
  * Discord permission mapping for each action
  */
-export const ACTION_DISCORD_PERMS: Record<ModAction, bigint> = {
+const ACTION_DISCORD_PERMS: Record<ModAction, bigint> = {
     ban: PermissionFlagsBits.BanMembers,
     unban: PermissionFlagsBits.BanMembers,
     kick: PermissionFlagsBits.KickMembers,
     mute: PermissionFlagsBits.ModerateMembers,
     unmute: PermissionFlagsBits.ModerateMembers,
-    warn: PermissionFlagsBits.ModerateMembers,
-    purge: PermissionFlagsBits.ManageMessages,
-    reason: PermissionFlagsBits.ModerateMembers,
-    delcase: PermissionFlagsBits.Administrator,
-    modleaderboard: PermissionFlagsBits.Administrator,
-    modlogs: PermissionFlagsBits.ViewAuditLog,
-    modstats: PermissionFlagsBits.Administrator,
-    whois: PermissionFlagsBits.ModerateMembers,
-    caseinfo: PermissionFlagsBits.ModerateMembers,
-    av: PermissionFlagsBits.ModerateMembers,
-    banword: PermissionFlagsBits.ManageMessages,
-    checkperms: PermissionFlagsBits.ManageRoles,
-    dm: PermissionFlagsBits.ManageMessages,
-    lock: PermissionFlagsBits.ManageChannels,
-    unlock: PermissionFlagsBits.ManageChannels,
-    hide: PermissionFlagsBits.ManageChannels,
-    unhide: PermissionFlagsBits.ManageChannels,
-    move: PermissionFlagsBits.MoveMembers,
-    movevc: PermissionFlagsBits.MoveMembers,
-    role: PermissionFlagsBits.ManageRoles,
-    inrole: PermissionFlagsBits.ManageRoles,
-    ad: PermissionFlagsBits.MoveMembers,
-    autodrag: PermissionFlagsBits.MoveMembers,
-    suggestion: PermissionFlagsBits.ManageMessages
+    warn: PermissionFlagsBits.ModerateMembers
 };
-
 
 /**
  * Check if a member has a configured mod role
  */
-export async function hasModRole(guildId: string, member: GuildMember | APIInteractionGuildMember): Promise<boolean> {
-    if (!member) return false;
+export async function hasModRole(
+    guildId: string, 
+    member: GuildMember | APIInteractionGuildMember
+): Promise<boolean> {
+    try {
+        const modRoles = await db.modRole.findMany({
+            where: { guild_id: guildId },
+            select: { role_id: true }
+        });
 
-    // Get member role IDs
-    const memberRoleIds = Array.isArray(member.roles)
-        ? member.roles
-        : Array.from(member.roles.cache.keys());
+        if (modRoles.length === 0) return false;
 
-    // Check DB for configured mod roles
-    const modRoles = await db.modRole.findMany({
-        where: { guild_id: guildId }
-    });
+        const modRoleIds = new Set(modRoles.map((mr: any) => mr.role_id));
+        let memberRoleIds: string[] = [];
+        
+        if (Array.isArray(member.roles)) {
+            memberRoleIds = member.roles;
+        } else {
+            memberRoleIds = member.roles.cache.map(r => r.id);
+        }
 
-    // Check if member has any of the configured roles
-    const hasConfiguredRole = modRoles.some((mr: any) => memberRoleIds.includes(mr.role_id));
-
-    // Also check for literal "Mod" or "Moderator" role names if member object has roles cache
-    let hasLiteralRole = false;
-    if ('roles' in member && !Array.isArray(member.roles)) {
-        hasLiteralRole = member.roles.cache.some(r => r.name === 'Mod' || r.name === 'Moderator');
+        return memberRoleIds.some(roleId => modRoleIds.has(roleId));
+    } catch (error) {
+        console.error('Error checking mod role:', error);
+        return false;
     }
-
-    return hasConfiguredRole || hasLiteralRole;
 }
 
 /**
  * Check if a member has a configured staff role
  */
-export async function hasStaffRole(guildId: string, member: GuildMember | APIInteractionGuildMember): Promise<boolean> {
-    if (!member) return false;
+export async function hasStaffRole(
+    guildId: string, 
+    member: GuildMember | APIInteractionGuildMember
+): Promise<boolean> {
+    try {
+        const staffRoles = await db.staffRole.findMany({
+            where: { guild_id: guildId },
+            select: { role_id: true }
+        });
 
-    const memberRoleIds = Array.isArray(member.roles)
-        ? member.roles
-        : Array.from(member.roles.cache.keys());
+        if (staffRoles.length === 0) return false;
 
-    const staffRoles = await db.staffRole.findMany({
-        where: { guild_id: guildId }
-    });
+        const staffRoleIds = new Set(staffRoles.map((sr: any) => sr.role_id));
+        let memberRoleIds: string[] = [];
+        
+        if (Array.isArray(member.roles)) {
+            memberRoleIds = member.roles;
+        } else {
+            memberRoleIds = member.roles.cache.map(r => r.id);
+        }
 
-    return staffRoles.some((sr: any) => memberRoleIds.includes(sr.role_id));
-}
-
-/**
- * Check if a member has a configured senior mod role
- */
-export async function hasSrModRole(guildId: string, member: GuildMember | APIInteractionGuildMember): Promise<boolean> {
-    if (!member) return false;
-
-    const memberRoleIds = Array.isArray(member.roles)
-        ? member.roles
-        : Array.from(member.roles.cache.keys());
-
-    // @ts-ignore - srModRole is generated
-    const srModRoles = await db.srModRole.findMany({
-        where: { guild_id: guildId }
-    });
-
-    return srModRoles.some((smr: any) => memberRoleIds.includes(smr.role_id));
+        return memberRoleIds.some(roleId => staffRoleIds.has(roleId));
+    } catch (error) {
+        console.error('Error checking staff role:', error);
+        return false;
+    }
 }
 
 /**
@@ -147,12 +96,6 @@ export async function canPerformAction(
     member: GuildMember | APIInteractionGuildMember,
     action: ModAction
 ): Promise<boolean> {
-    // Check if user has srmod role and action is allowed for srmod
-    const isSrMod = await hasSrModRole(guildId, member);
-    if (isSrMod && ROLE_PERMISSIONS.srmod.includes(action)) {
-        return true;
-    }
-
     // Check if user has mod role and action is allowed for mods
     const isMod = await hasModRole(guildId, member);
     if (isMod && ROLE_PERMISSIONS.mod.includes(action)) {
@@ -166,29 +109,21 @@ export async function canPerformAction(
     }
 
     // Fallback to Discord permissions
-    let perms: bigint;
-
-    if (typeof member.permissions === 'string') {
-        perms = BigInt(member.permissions);
-    } else {
-        // It's a Readonly<PermissionsBitField>
-        perms = member.permissions.bitfield;
-    }
-
+    const perms = typeof member.permissions === 'string' 
+        ? BigInt(member.permissions) 
+        : member.permissions;
+    
     const requiredPerm = ACTION_DISCORD_PERMS[action];
     return hasPermission(perms, requiredPerm);
 }
 
-// Helper to check permission bitfield
-function hasPermission(memberPerms: bigint, requiredPerm: bigint): boolean {
-    return (memberPerms & requiredPerm) === requiredPerm || (memberPerms & PermissionFlagsBits.Administrator) === PermissionFlagsBits.Administrator;
-}
-
 /**
- * Get the highest privilege role type a member has
+ * Get the role type of a member (mod, staff, or null)
  */
-export async function getMemberRoleType(guildId: string, member: GuildMember | APIInteractionGuildMember): Promise<RoleType | null> {
-    if (await hasSrModRole(guildId, member)) return 'srmod';
+export async function getMemberRoleType(
+    guildId: string,
+    member: GuildMember | APIInteractionGuildMember
+): Promise<RoleType | null> {
     if (await hasModRole(guildId, member)) return 'mod';
     if (await hasStaffRole(guildId, member)) return 'staff';
     return null;
