@@ -40,23 +40,61 @@ export const Whois: Command = {
         const created = Math.floor(targetUser.createdTimestamp / 1000);
         const joined = member ? Math.floor(member.joinedTimestamp! / 1000) : null;
 
-        const roles = member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).join(', ') || 'None' : 'N/A';
+        // Get roles with count
+        const rolesList = member ? member.roles.cache.filter(r => r.name !== '@everyone') : null;
+        const rolesCount = rolesList ? rolesList.size : 0;
+        const rolesDisplay = rolesList && rolesCount > 0 
+            ? rolesList.map(r => r.toString()).join(' ') 
+            : 'No roles';
+
+        // Get moderation stats
+        const logs = await modService.getLogs(ctx.guildId, targetUser.id);
+        const warnCount = logs?.filter(l => l.action === 'warn').length || 0;
+        const manualCount = logs?.filter(l => l.action === 'mute' && !l.active).length || 0;
+
+        // Check for active timeout/mute
+        const activeMute = logs?.find(l => l.action === 'mute' && l.active);
+        let timedOutText = '';
+        if (activeMute) {
+            const unmuteTime = activeMute.duration_seconds 
+                ? Math.floor((new Date(activeMute.created_at).getTime() / 1000) + activeMute.duration_seconds)
+                : null;
+            timedOutText = `\n**Timed Out**\nUnmute ${unmuteTime ? `<t:${unmuteTime}:R>` : 'permanent'}`;
+        }
 
         const embed = new EmbedBuilder()
             .setThumbnail(targetUser.displayAvatarURL())
             .setDescription(
-                `**${targetUser.tag}** • ${targetUser.id}\n\n` +
-                `**Created:** <t:${created}:R>\n` +
-                `**Joined:** ${joined ? `<t:${joined}:R>` : 'Not in server'}\n\n` +
-                `**Roles:** ${roles}`
-            );
+                `${TICK} **${targetUser.tag}**\n\n` +
+                `@${targetUser.username}\n\n` +
+                `**Joined**\n` +
+                `${joined ? `<t:${joined}:f>` : 'Not in server'}\n` +
+                `${joined ? `<t:${joined}:R>` : ''}\n\n` +
+                `**Registered**\n` +
+                `<t:${created}:f>\n` +
+                `<t:${created}:R>\n\n` +
+                `**Roles(${rolesCount})**\n${rolesDisplay}` +
+                (timedOutText ? `\n\n${timedOutText}` : '') +
+                `\n\n**Modlogs**\n` +
+                `Warns : ${warnCount}\n` +
+                `Manuals : ${manualCount}`
+            )
+            .setFooter({ text: `${targetUser.id} | Today at ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` });
 
         const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId(`whois_modlogs_${targetUser.id}_${ctx.authorId}`)
                     .setLabel('Modlogs')
-                    .setStyle(ButtonStyle.Primary)
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId(`whois_manuals_${targetUser.id}_${ctx.authorId}`)
+                    .setLabel('Manuals')
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId(`whois_addmanual_${targetUser.id}_${ctx.authorId}`)
+                    .setLabel('Add Manual')
+                    .setStyle(ButtonStyle.Secondary)
             );
 
         const message = await ctx.reply({ embeds: [embed], components: [row] });
@@ -69,15 +107,7 @@ export const Whois: Command = {
 
         collector.on('collect', async (interaction: any) => {
             try {
-                if (interaction.customId.startsWith('whois_modlogs_')) {
-                    // Show modlogs
-                    const userId = interaction.customId.split('_')[2];
-                    const logs = await modService.getLogs(ctx.guildId, userId);
-
-                    if (!logs || logs.length === 0) {
-                        const modlogsEmbed = new EmbedBuilder()
-                            .setDescription(
-                                `${TICK} ** ${targetUser.tag}**\n\n` +
+                if (interaction.customId.st${targetUser.tag}**\n\n` +
                                 `Clean record • No history`
                             );
 
@@ -107,12 +137,75 @@ export const Whois: Command = {
 
                     const modlogsEmbed = new EmbedBuilder()
                         .setDescription(
-                            `${TICK} ** ${targetUser.tag}**\n\n` +
-                            `** Status:** ${status} • ** Cases:** ${logs.length}\n\n` +
+                            `${TICK} **${targetUser.tag}**\n\n` +
+                            `**Status:** ${status} • **Cases:** ${logs.length}\n\n` +
                             `${logRows}`
                         );
 
                     const backRow = new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
+                                .setLabel('Back')
+                                .setStyle(ButtonStyle.Secondary)
+                        );
+
+                    await interaction.update({ embeds: [modlogsEmbed], components: [backRow] });
+
+                } else if (interaction.customId.startsWith('whois_manuals_')) {
+                    // Show manuals
+                    const userId = interaction.customId.split('_')[2];
+                    const logs = await modService.getLogs(ctx.guildId, userId);
+                    const manuals = logs?.filter(l => l.action === 'mute') || [];
+
+                    if (manuals.length === 0) {
+                        const manualsEmbed = new EmbedBuilder()
+                            .setDescription(
+                                `${TICK} **${targetUser.tag}**\n\n` +
+                                `No manual mutes found`
+                            );
+
+                        const backRow = new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
+                                    .setLabel('Back')
+                                    .setStyle(ButtonStyle.Secondary)
+                            );
+
+                        await interaction.update({ embeds: [manualsEmbed], components: [backRow] });
+                        return;
+                    }
+
+                    const manualRows = manuals.slice(0, 8).map(log => {
+                        const timestamp = Math.floor(new Date(log.created_at).getTime() / 1000);
+                        const status = log.active ? '🔴 Active' : '✅ Completed';
+                        return `#${log.case_number} ${status} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
+                    }).join('\n\n');
+
+                    const manualsEmbed = new EmbedBuilder()
+                        .setDescription(
+                            `${TICK} **${targetUser.tag}**\n\n` +
+                            `**Manual Mutes:** ${manuals.length}\n\n` +
+                            `${manualRows}`
+                        );
+
+                    const backRow = new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
+                                .setLabel('Back')
+                                .setStyle(ButtonStyle.Secondary)
+                        );
+
+                    await interaction.update({ embeds: [manualsEmbed], components: [backRow] });
+
+                } else if (interaction.customId.startsWith('whois_addmanual_')) {
+                    // Add manual functionality placeholder
+                    await interaction.reply({ 
+                        content: 'Use `!mute <user> <duration> <reason>` to add a manual mute.', 
+                        ephemeral: true 
+                   
                         .addComponents(
                             new ButtonBuilder()
                                 .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)

@@ -116,10 +116,11 @@ export const Move: Command = {
 
         try {
             await targetMember.voice.setChannel(targetChannel.id);
-            const embed = new EmbedBuilder()
-                .setDescription(`${TICK} **${targetMember.user.username}** has been dragged to **${targetChannel.name}**`);
-
-            await ctx.reply({ embeds: [embed] });
+            
+            // React with checkmark
+            if (ctx.inner instanceof Message) {
+                await ctx.inner.react('✅').catch(() => {});
+            }
 
             // Log action
             await ModLogger.log(ctx.inner.guild!, ctx.inner.member.user as User, targetMember.user, 'Move', null, {

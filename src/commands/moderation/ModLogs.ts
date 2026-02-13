@@ -45,7 +45,7 @@ export const ModLogs: Command = {
             if (!logs || logs.length === 0) {
                 const embed = new EmbedBuilder()
                     .setDescription(
-                        `${TICK} ** ${targetUser.tag}**\n\n` +
+                        `${TICK} **${targetUser.tag}**\n\n` +
                         `Clean record • No history`
                     );
                 await ctx.reply({ embeds: [embed], ephemeral: true });
@@ -62,20 +62,20 @@ export const ModLogs: Command = {
 
             const logRows = logs.slice(0, 8).map(log => {
                 const timestamp = Math.floor(new Date(log.created_at).getTime() / 1000);
-                return `#${log.case_number} ${log.action} • <t:${timestamp}: R >\n${log.reason || 'No reason'} `;
+                return `#${log.case_number} ${log.action} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
             }).join('\n\n');
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} ** ${targetUser.tag}**\n\n` +
-                    `** Status:** ${status} • ** Cases:** ${logs.length} \n\n` +
-                    `${logRows} `
+                    `${TICK} **${targetUser.tag}**\n\n` +
+                    `**Status:** ${status} • **Cases:** ${logs.length}\n\n` +
+                    `${logRows}`
                 );
 
             const row = new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId(`delete_modlogs_${ctx.authorId} `)
+                        .setCustomId(`delete_modlogs_${ctx.authorId}`)
                         .setLabel('🗑️ Delete')
                         .setStyle(ButtonStyle.Danger)
                 );
@@ -100,7 +100,7 @@ export const ModLogs: Command = {
             });
 
         } catch (err: any) {
-            await ctx.reply({ content: `Failed to fetch logs: ${err.message} `, ephemeral: true });
+            await ctx.reply({ content: `Failed to fetch logs: ${err.message}`, ephemeral: true });
         }
     }
 };
