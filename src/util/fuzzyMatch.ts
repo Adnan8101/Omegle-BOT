@@ -97,7 +97,7 @@ export function findBestChannelMatch(
     let bestMatch: { channel: Channel; similarity: number } | null = null;
     
     for (const channel of channels) {
-        if (!('name' in channel)) continue;
+        if (!('name' in channel) || !channel.name) continue;
         const similarity = calculateSimilarity(input, channel.name);
         
         if (similarity >= threshold) {
