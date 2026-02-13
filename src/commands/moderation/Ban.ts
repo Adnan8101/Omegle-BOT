@@ -75,7 +75,7 @@ export const Ban: Command = {
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} **Banned** ${targetUser.tag}\n` +
+                    `${TICK} **Banned** ${targetUser.username}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`
                 );

@@ -25,7 +25,10 @@ export const ModLogs: Command = {
 
         const hasRole = await hasModRole(ctx.guildId, ctx.inner.member);
 
-        if (!hasPerm && !hasRole) return;
+        if (!hasPerm && !hasRole) {
+            await ctx.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+            return;
+        }
 
         const targetInput = args[0];
         if (!targetInput) {
@@ -45,7 +48,7 @@ export const ModLogs: Command = {
             if (!logs || logs.length === 0) {
                 const embed = new EmbedBuilder()
                     .setDescription(
-                        `${TICK} **${targetUser.tag}**\n\n` +
+                        `${TICK} **${targetUser.username}**\n\n` +
                         `Clean record • No history`
                     );
                 await ctx.reply({ embeds: [embed], ephemeral: true });
@@ -70,7 +73,7 @@ export const ModLogs: Command = {
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} **${targetUser.tag}**\n\n` +
+                    `${TICK} **${targetUser.username}**\n\n` +
                     `**Status:** ${status} • **Cases:** ${logs.length}\n` +
                     `**Case IDs:** ${allCaseIds}\n\n` +
                     `${logRows}`

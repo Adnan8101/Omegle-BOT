@@ -108,7 +108,7 @@ client.on(Events.MessageCreate, async (message: Message) => {
                         } catch (err) {
                             console.error('Webhook failed, falling back to standard message:', err);
                             await channel.send({
-                                content: `**${message.author.tag}**: ${message.content}`,
+                                content: `**${message.author.username}**: ${message.content}`,
                                 files: message.attachments.map(a => a.url)
                             });
 
@@ -125,7 +125,7 @@ client.on(Events.MessageCreate, async (message: Message) => {
                         }
                     } else if (channel.isTextBased()) {
                         await channel.send({
-                            content: `**${message.author.tag}**: ${message.content}`,
+                            content: `**${message.author.username}**: ${message.content}`,
                             files: message.attachments.map(a => a.url)
                         });
 

@@ -6,6 +6,8 @@ import { TranscriptGenerator } from '../services/mail/TranscriptGenerator';
 import { modService } from '../services/moderation/ModerationService';
 import { activityLogService } from '../services/logging/ActivityLogService';
 
+const TICK = '<:tickYes:1469272837192814623>';
+
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -29,15 +31,12 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }
 
         // AUTO-SELECT CATEGORY LOGIC
-        // If there are categories, just pick the first one (usually 'Support') to avoid extra user steps.
         const defaultCategory = categories[0];
         const categoryId = defaultCategory.id;
         const userId = interaction.user.id;
 
-        // Skip menu, simulate selection
         await interaction.deferUpdate();
 
-        // -- LOGIC COPIED FROM "Category Selected" BLOCK --
         // Create Ticket in DB
         const ticket = await mailService.createPendingTicket(guildId, userId, categoryId);
         if (!ticket) {
@@ -49,115 +48,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) return;
 
-        // Get Category Config (we already have defaultCategory, but let's be safe)
         const catConfig = defaultCategory;
 
-        // Create Channel
         try {
-            // Generate Random 4-digit ID
-            const displayId = Math.floor(1000 + Math.random() * 9000);
-
-            const channel = await guild.channels.create({
-                name: `${interaction.user.username}-${displayId}`, // Use display ID in channel name too? Or keep username-ticket
-                type: ChannelType.GuildText,
-                parent: catConfig.channel_category_id,
-                topic: `User: ${interaction.user.id} | Ticket: ${ticket.ticket_id} | DisplayID: ${displayId}`,
-                permissionOverwrites: [
-                    {
-                        id: guild.id,
-                        deny: [PermissionFlagsBits.ViewChannel]
-                    },
-                    {
-                        id: client.user!.id,
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-                    },
-                    ...catConfig.staff_role_ids.map((roleId: string) => ({
-                        id: roleId,
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-                    }))
-                ]
-            });
-
-            // Update Ticket as OPEN
-            await mailService.openTicket(ticket.ticket_id, channel.id);
-
-            // Fetch Recent Mod Action
-            const recentAction = await modService.getRecentAction(guildId, userId);
-
-            // Send Control Panel
-            const controlEmbed = new EmbedBuilder()
-                .setTitle('New Ticket')
-                .setThumbnail(interaction.user.displayAvatarURL())
-                .setDescription(`**User:** <@${userId}>\n**Category:** ${catConfig.name}\n**Ticket ID:** ${displayId}`)
-                .setFooter({ text: 'Staff Controls' });
-
-            // Add Recent Mod Action field if exists
-            if (recentAction) {
-                const actionTimestamp = Math.floor(new Date(recentAction.created_at).getTime() / 1000);
-                const actionText = `**Action:** ${recentAction.action.toUpperCase()}\n**By:** <@${recentAction.moderator_id}>\n**Reason:** ${recentAction.reason || 'No reason provided'}\n**When:** <t:${actionTimestamp}:R>`;
-                controlEmbed.addFields({ name: 'Recent Mod Action', value: actionText, inline: false });
-            }
-
-            const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Primary),
-                new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Danger)
-            );
-
-            const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder().setCustomId(`mail_modlogs_${userId}`).setLabel('Mod Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_clogs_${userId}`).setLabel('Chat Logs').setStyle(ButtonStyle.Secondary)
-            );
-
-            // Build content with moderator ping if recent action exists
-            let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
-            if (recentAction) {
-                channelContent += `\n\n**Case reopened via modmail** - <@${recentAction.moderator_id}>, this user had a recent ${recentAction.action} action.`;
-            }
-
-            await channel.send({
-                content: channelContent,
-                embeds: [controlEmbed],
-                components: [row1, row2]
-            });
-
-            await interaction.editReply({ content: `Ticket created! You can now send messages here.`, components: [] });
-
-        } catch (e) {
-            console.error(e);
-            await interaction.editReply({ content: `Error creating ticket channel.`, components: [] });
-        }
-    }
-
-    // 2. Category Selected (Menu in DM)
-    if (customId.startsWith('mail_cat_select_')) {
-        if (!interaction.isStringSelectMenu()) return;
-
-        const guildId = customId.split('_')[3];
-        const categoryId = interaction.values[0];
-        const userId = interaction.user.id;
-
-        await interaction.deferUpdate();
-
-        // Create Ticket in DB
-        const ticket = await mailService.createPendingTicket(guildId, userId, categoryId);
-        if (!ticket) {
-            await interaction.editReply({ content: 'Failed to create ticket.', components: [] });
-            return;
-        }
-
-        // Create Channel in Guild
-        const guild = client.guilds.cache.get(guildId);
-        if (!guild) return;
-
-        // Get Category Config
-        const catConfig = (await mailService.getCategories(guildId)).find((c: any) => c.id === categoryId);
-        if (!catConfig) return;
-
-        // Create Channel
-        try {
-            // Generate Random 4-digit ID
             const displayId = Math.floor(1000 + Math.random() * 9000);
 
             const channel = await guild.channels.create({
@@ -184,39 +77,210 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             // Update Ticket as OPEN
             await mailService.openTicket(ticket.ticket_id, channel.id);
 
-            // Fetch Recent Mod Action
+            // Fetch user info for detailed embed
+            const member = await guild.members.fetch(userId).catch(() => null);
+            const user = await client.users.fetch(userId).catch(() => null);
             const recentAction = await modService.getRecentAction(guildId, userId);
+            const modLogs = await modService.getLogs(guildId, userId).catch(() => []);
+            const voiceLogs = await activityLogService.getVoiceLogs(guildId, userId, 5).catch(() => []);
 
-            // Send Control Panel
+            const createdAt = user ? Math.floor(user.createdTimestamp / 1000) : 0;
+            const joinedAt = member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : 0;
+            const totalCases = modLogs?.length || 0;
+            const currentVC = member?.voice.channel ? `<#${member.voice.channel.id}>` : 'None';
+            const roles = member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).slice(0, 10).join(', ') || 'None' : 'N/A';
+
+            // Build detailed ticket embed
             const controlEmbed = new EmbedBuilder()
-                .setTitle('New Ticket')
-                .setThumbnail(interaction.user.displayAvatarURL())
-                .setDescription(`**User:** <@${userId}>\n**Category:** ${catConfig.name}\n**Ticket ID:** ${displayId}`)
-                .setFooter({ text: 'Staff Controls' });
+                .setColor(0x2B2D31)
+                .setAuthor({
+                    name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
+                    iconURL: user?.displayAvatarURL() || undefined
+                })
+                .setThumbnail(user?.displayAvatarURL() || null)
+                .setDescription(
+                    `**User:** <@${userId}> (\`${userId}\`)\n` +
+                    `**Category:** ${catConfig.name}\n` +
+                    `**Created:** <t:${createdAt}:R> • **Joined:** ${joinedAt ? `<t:${joinedAt}:R>` : 'N/A'}\n` +
+                    `**Roles:** ${roles}\n` +
+                    `**Current VC:** ${currentVC}\n` +
+                    `**Mod Cases:** ${totalCases}`
+                )
+                .setFooter({ text: `Ticket ${displayId} • ${catConfig.name}` })
+                .setTimestamp();
 
             // Add Recent Mod Action field if exists
             if (recentAction) {
                 const actionTimestamp = Math.floor(new Date(recentAction.created_at).getTime() / 1000);
-                const actionText = `**Action:** ${recentAction.action.toUpperCase()}\n**By:** <@${recentAction.moderator_id}>\n**Reason:** ${recentAction.reason || 'No reason provided'}\n**When:** <t:${actionTimestamp}:R>`;
-                controlEmbed.addFields({ name: 'Recent Mod Action', value: actionText, inline: false });
+                controlEmbed.addFields({
+                    name: '⚠️ Recent Mod Action',
+                    value: `**${recentAction.action.toUpperCase()}** by <@${recentAction.moderator_id}> • <t:${actionTimestamp}:R>\n${recentAction.reason || 'No reason'}`,
+                    inline: false
+                });
             }
 
+            // Add recent VC activity if exists
+            if (voiceLogs && voiceLogs.length > 0) {
+                const vcLines = voiceLogs.slice(0, 3).map(log => {
+                    const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
+                    let dur = 'Active';
+                    if (log.duration_seconds && log.duration_seconds > 0) {
+                        const hrs = Math.floor(log.duration_seconds / 3600);
+                        const mins = Math.floor((log.duration_seconds % 3600) / 60);
+                        dur = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                    }
+                    return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
+                }).join('\n');
+                controlEmbed.addFields({ name: 'Recent VC Activity', value: vcLines, inline: false });
+            }
+
+            // All buttons are Secondary (colorless/grey)
             const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Primary),
-                new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Danger)
+                new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Secondary)
             );
 
             const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_modlogs_${userId}`).setLabel('Mod Logs').setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_clogs_${userId}`).setLabel('Chat Logs').setStyle(ButtonStyle.Secondary)
+                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary)
             );
 
             // Build content with moderator ping if recent action exists
             let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
             if (recentAction) {
-                channelContent += `\n\n**Case reopened via modmail** - <@${recentAction.moderator_id}>, this user had a recent ${recentAction.action} action.`;
+                channelContent += `\n⚠️ <@${recentAction.moderator_id}> — user had a recent **${recentAction.action}** action.`;
+            }
+
+            await channel.send({
+                content: channelContent,
+                embeds: [controlEmbed],
+                components: [row1, row2]
+            });
+
+            await interaction.editReply({ content: `Ticket created! You can now send messages here.`, components: [] });
+
+        } catch (e) {
+            console.error(e);
+            await interaction.editReply({ content: `Error creating ticket channel.`, components: [] });
+        }
+    }
+
+    // 2. Category Selected (Menu in DM)
+    if (customId.startsWith('mail_cat_select_')) {
+        if (!interaction.isStringSelectMenu()) return;
+
+        const guildId = customId.split('_')[3];
+        const categoryId = interaction.values[0];
+        const userId = interaction.user.id;
+
+        await interaction.deferUpdate();
+
+        const ticket = await mailService.createPendingTicket(guildId, userId, categoryId);
+        if (!ticket) {
+            await interaction.editReply({ content: 'Failed to create ticket.', components: [] });
+            return;
+        }
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return;
+
+        const catConfig = (await mailService.getCategories(guildId)).find((c: any) => c.id === categoryId);
+        if (!catConfig) return;
+
+        try {
+            const displayId = Math.floor(1000 + Math.random() * 9000);
+
+            const channel = await guild.channels.create({
+                name: `${interaction.user.username}-${displayId}`,
+                type: ChannelType.GuildText,
+                parent: catConfig.channel_category_id,
+                topic: `User: ${interaction.user.id} | Ticket: ${ticket.ticket_id} | DisplayID: ${displayId}`,
+                permissionOverwrites: [
+                    {
+                        id: guild.id,
+                        deny: [PermissionFlagsBits.ViewChannel]
+                    },
+                    {
+                        id: client.user!.id,
+                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                    },
+                    ...catConfig.staff_role_ids.map((roleId: string) => ({
+                        id: roleId,
+                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                    }))
+                ]
+            });
+
+            await mailService.openTicket(ticket.ticket_id, channel.id);
+
+            const member = await guild.members.fetch(userId).catch(() => null);
+            const user = await client.users.fetch(userId).catch(() => null);
+            const recentAction = await modService.getRecentAction(guildId, userId);
+            const modLogs = await modService.getLogs(guildId, userId).catch(() => []);
+            const voiceLogs = await activityLogService.getVoiceLogs(guildId, userId, 5).catch(() => []);
+
+            const createdAt = user ? Math.floor(user.createdTimestamp / 1000) : 0;
+            const joinedAt = member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : 0;
+            const totalCases = modLogs?.length || 0;
+            const currentVC = member?.voice.channel ? `<#${member.voice.channel.id}>` : 'None';
+            const roles = member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).slice(0, 10).join(', ') || 'None' : 'N/A';
+
+            const controlEmbed = new EmbedBuilder()
+                .setColor(0x2B2D31)
+                .setAuthor({
+                    name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
+                    iconURL: user?.displayAvatarURL() || undefined
+                })
+                .setThumbnail(user?.displayAvatarURL() || null)
+                .setDescription(
+                    `**User:** <@${userId}> (\`${userId}\`)\n` +
+                    `**Category:** ${catConfig.name}\n` +
+                    `**Created:** <t:${createdAt}:R> • **Joined:** ${joinedAt ? `<t:${joinedAt}:R>` : 'N/A'}\n` +
+                    `**Roles:** ${roles}\n` +
+                    `**Current VC:** ${currentVC}\n` +
+                    `**Mod Cases:** ${totalCases}`
+                )
+                .setFooter({ text: `Ticket ${displayId} • ${catConfig.name}` })
+                .setTimestamp();
+
+            if (recentAction) {
+                const actionTimestamp = Math.floor(new Date(recentAction.created_at).getTime() / 1000);
+                controlEmbed.addFields({
+                    name: '⚠️ Recent Mod Action',
+                    value: `**${recentAction.action.toUpperCase()}** by <@${recentAction.moderator_id}> • <t:${actionTimestamp}:R>\n${recentAction.reason || 'No reason'}`,
+                    inline: false
+                });
+            }
+
+            if (voiceLogs && voiceLogs.length > 0) {
+                const vcLines = voiceLogs.slice(0, 3).map(log => {
+                    const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
+                    let dur = 'Active';
+                    if (log.duration_seconds && log.duration_seconds > 0) {
+                        const hrs = Math.floor(log.duration_seconds / 3600);
+                        const mins = Math.floor((log.duration_seconds % 3600) / 60);
+                        dur = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                    }
+                    return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
+                }).join('\n');
+                controlEmbed.addFields({ name: 'Recent VC Activity', value: vcLines, inline: false });
+            }
+
+            const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Secondary)
+            );
+
+            const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder().setCustomId(`mail_modlogs_${userId}`).setLabel('Mod Logs').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary)
+            );
+
+            let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
+            if (recentAction) {
+                channelContent += `\n⚠️ <@${recentAction.moderator_id}> — user had a recent **${recentAction.action}** action.`;
             }
 
             await channel.send({
@@ -240,9 +304,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
         await interaction.deferReply();
 
-        // Check if already claimed? DB constraint checks status='open' usually, but let's check current state
-        // The service method `claimTicket` only updates if status='open'.
-
         const result = await mailService.claimTicket(ticketId, staffId);
 
         if (result.count === 0) {
@@ -250,7 +311,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             return;
         }
 
-        // Update Embed/UI
         if (interaction.channel?.isTextBased() && !interaction.channel.isDMBased()) {
             await interaction.channel.send(`**Claimed by** <@${staffId}>`);
         }
@@ -258,7 +318,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         await interaction.editReply({ content: 'Ticket claimed.' });
     }
 
-    // 4. Close Ticket
+    // 4. Close Ticket — generate transcript then auto-delete channel
     if (customId.startsWith('mail_close_')) {
         const ticketId = customId.split('_')[2];
 
@@ -271,15 +331,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }
 
         const channel = interaction.channel as TextChannel;
-        // Lock Channel
-        if (channel) {
-            await channel.permissionOverwrites.edit(channel.guild.roles.everyone, { SendMessages: false });
-            // Remove specific user overwrites if needed, but usually just locking everything handles it
-        }
 
         // Generate Transcript
         const messages = await mailService.getTicketMessages(ticketId);
-        // Map Kysely types if needed, but assuming schema matches
         const html = TranscriptGenerator.generateHTML(messages as any, ticket.ticket_id, channel.guild.name);
 
         // Send to Transcript Channel
@@ -287,8 +341,19 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         if (config?.transcript_channel_id) {
             const tChannel = client.channels.cache.get(config.transcript_channel_id) as TextChannel;
             if (tChannel) {
+                const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
+                const transcriptEmbed = new EmbedBuilder()
+                    .setColor(0x2B2D31)
+                    .setDescription(
+                        `${TICK} **Ticket Closed**\n\n` +
+                        `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +
+                        `**Closed by:** <@${interaction.user.id}>\n` +
+                        `**Ticket ID:** ${ticket.ticket_id}`
+                    )
+                    .setTimestamp();
+
                 await tChannel.send({
-                    content: `Ticket Closed: ${ticket.ticket_id}`,
+                    embeds: [transcriptEmbed],
                     files: [{
                         attachment: Buffer.from(html),
                         name: `transcript-${ticket.ticket_id}.html`
@@ -297,35 +362,21 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             }
         }
 
-        // Rename and Move Channel
-        if (channel) {
+        await interaction.editReply(`${TICK} Ticket closed. Transcript saved. Channel will be deleted in 5 seconds.`);
+
+        // Auto-delete channel after 5 seconds
+        setTimeout(async () => {
             try {
-                // Rename to closed-username
-                const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
-                const username = targetUser ? targetUser.username : 'unknown';
-
-                // Discord channel names are lowercase, no spaces, specialized chars replaced
-                const safeName = `closed-${username}`.toLowerCase().replace(/[^a-z0-9-_]/g, '-').substring(0, 100);
-
-                await channel.setName(safeName);
-
-                // Move to closed category if configured
-                if (config?.closed_category_id) {
-                    await channel.setParent(config.closed_category_id, { lockPermissions: false });
-                }
+                await channel.delete();
             } catch (err) {
-                console.error('Failed to rename/move closed ticket channel:', err);
+                console.error('Failed to delete ticket channel:', err);
             }
-        }
-
-        await interaction.editReply('Ticket closed. Transcript generated.');
-        // Optional: Delete channel after 10s
-        // setTimeout(() => channel.delete(), 10000);
+        }, 5000);
     }
 
-    // ================== MODERATION BUTTONS ==================
+    // ================== INFO BUTTONS (reuse command logic) ==================
 
-    // 5. Mod Logs
+    // 5. Mod Logs — same data as !modlogs command
     if (customId.startsWith('mail_modlogs_')) {
         const targetId = customId.split('_')[2];
         await interaction.deferReply({ ephemeral: true });
@@ -334,38 +385,36 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             const logs = await modService.getLogs(interaction.guildId!, targetId);
 
             if (!logs || logs.length === 0) {
-                await interaction.editReply('No moderation logs found for this user.');
+                await interaction.editReply(`${TICK} Clean record — no moderation history.`);
                 return;
             }
 
             const targetUser = await client.users.fetch(targetId).catch(() => null);
-            const targetTag = targetUser ? targetUser.tag : targetId;
+            const targetTag = targetUser ? targetUser.username : targetId;
 
-            const logRows = await Promise.all(logs.slice(0, 10).map(async log => {
+            const activeMute = logs.find(l => l.action === 'mute' && l.active);
+            const activeBan = logs.find(l => l.action === 'ban' && l.active);
+            let status = 'Active';
+            let color = 0x5865F2;
+            if (activeBan) { status = 'Banned'; color = 0xED4245; }
+            else if (activeMute) { status = 'Muted'; color = 0xFEE75C; }
+
+            const logRows = logs.slice(0, 8).map(log => {
                 const timestamp = Math.floor(new Date(log.created_at).getTime() / 1000);
-                const moderator = await client.users.fetch(log.moderator_id).catch(() => null);
-                const modName = moderator ? moderator.tag : 'Unknown';
+                return `#${log.case_number} ${log.action} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
+            }).join('\n\n');
 
-                let durationText = '';
-                if (log.duration_seconds && log.duration_seconds > 0) {
-                    const hours = Math.floor(log.duration_seconds / 3600);
-                    const minutes = Math.floor((log.duration_seconds % 3600) / 60);
-                    if (hours > 0) durationText = ` • **Duration:** ${hours}h ${minutes}m`;
-                    else if (minutes > 0) durationText = ` • **Duration:** ${minutes}m`;
-                    else durationText = ` • **Duration:** ${log.duration_seconds}s`;
-                }
-
-                return `**Case #${log.case_number.toString().padStart(4, '0')}** • **${log.action.toUpperCase()}**\n` +
-                    `**By:** ${modName} (<@${log.moderator_id}>)\n` +
-                    `**When:** <t:${timestamp}:R> (<t:${timestamp}:f>)${durationText}\n` +
-                    `**Reason:** ${log.reason || 'No reason provided'}`;
-            }));
+            const allCaseIds = logs.map(l => `#${l.case_number}`).join(', ');
 
             const embed = new EmbedBuilder()
-                .setAuthor({ name: `Moderation History for ${targetTag}`, iconURL: targetUser?.displayAvatarURL() })
-                .setDescription(logRows.join('\n\n'))
-                .setFooter({ text: `Total Cases: ${logs.length} | Showing latest ${Math.min(logs.length, 10)}` })
-                .setTimestamp();
+                .setColor(color)
+                .setAuthor({ name: `Mod Logs | ${targetTag}`, iconURL: targetUser?.displayAvatarURL() })
+                .setDescription(
+                    `**Status:** ${status} • **Cases:** ${logs.length}\n` +
+                    `**Case IDs:** ${allCaseIds}\n\n` +
+                    logRows
+                )
+                .setFooter({ text: `Showing ${Math.min(logs.length, 8)} of ${logs.length} cases` });
 
             await interaction.editReply({ embeds: [embed] });
         } catch (e: any) {
@@ -373,7 +422,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }
     }
 
-    // 6. VC Logs
+    // 6. VC Logs — same data as !vclogs command
     if (customId.startsWith('mail_vclogs_')) {
         const targetId = customId.split('_')[2];
         await interaction.deferReply({ ephemeral: true });
@@ -385,6 +434,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 await interaction.editReply('No voice activity found.');
                 return;
             }
+
+            const targetUser = await client.users.fetch(targetId).catch(() => null);
 
             const lines = logs.map(log => {
                 const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
@@ -404,8 +455,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             });
 
             const embed = new EmbedBuilder()
-                .setTitle(`VC Logs | ${targetId}`)
-                .setDescription(lines.join('\n'));
+                .setColor(0x2B2D31)
+                .setAuthor({ name: `VC Logs | ${targetUser?.username || targetId}`, iconURL: targetUser?.displayAvatarURL() })
+                .setDescription(lines.join('\n'))
+                .setFooter({ text: `Showing last ${logs.length} sessions` })
+                .setTimestamp();
 
             await interaction.editReply({ embeds: [embed] });
 
@@ -427,8 +481,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             const joined = member ? Math.floor(member.joinedTimestamp! / 1000) : null;
 
             const embed = new EmbedBuilder()
+                .setColor(0x2B2D31)
                 .setThumbnail(user.displayAvatarURL())
-                .setTitle(`Whois | ${user.tag}`)
+                .setAuthor({ name: `Whois | ${user.username}`, iconURL: user.displayAvatarURL() })
                 .setDescription(`**ID:** ${user.id} | <@${user.id}>`)
                 .addFields(
                     { name: 'Created On', value: `<t:${created}:F> (<t:${created}:R>)`, inline: true },
@@ -440,64 +495,5 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         } catch (e: any) {
             await interaction.editReply(`Failed to fetch user info: ${e.message}`);
         }
-    }
-
-    // 8. Chat Logs
-    if (customId.startsWith('mail_clogs_')) {
-        const targetId = customId.split('_')[2];
-        await interaction.deferReply({ ephemeral: true });
-
-        try {
-            const stats = await activityLogService.getChatStats(interaction.guildId!, targetId);
-            const logs = await activityLogService.getChatLogs(interaction.guildId!, targetId, 10);
-
-            if (!logs || logs.length === 0) {
-                await interaction.editReply('No chat activity found.');
-                return;
-            }
-
-            const topChannels = stats.topChannels.map((c, i) => {
-                return `**${i + 1}.** <#${c.channel_id}>: ${c.count} msgs`;
-            }).join('\n');
-
-            const activityLines = logs.map(log => {
-                const timestamp = Math.floor(new Date(log.created_at).getTime() / 1000);
-                return `<#${log.channel_id}> • <t:${timestamp}:R> • Msg ID: ${log.message_id}`;
-            }).join('\n');
-
-            const embed = new EmbedBuilder()
-                .setTitle(`Chat Logs | ${targetId}`)
-                .addFields(
-                    { name: 'Overview', value: `Total Messages: **${stats.totalMessages}**`, inline: false },
-                    { name: 'Top Active Channels', value: topChannels || 'None' },
-                    { name: 'Recent Activity', value: activityLines.substring(0, 1024) || 'None' }
-                );
-
-            await interaction.editReply({ embeds: [embed] });
-
-        } catch (e: any) {
-            await interaction.editReply(`Failed to fetch chat logs: ${e.message}`);
-        }
-    }
-
-    // ================== DELETE TICKET CHANNEL ==================
-    if (customId.startsWith('mail_delete_')) {
-        const ticketId = customId.split('_')[2];
-        
-        if (!interaction.channel || interaction.channel.isDMBased()) return;
-
-        await interaction.deferReply();
-        
-        const channel = interaction.channel as TextChannel;
-        
-        await interaction.editReply('Deleting channel in 3 seconds...');
-        
-        setTimeout(async () => {
-            try {
-                await channel.delete();
-            } catch (err) {
-                console.error('Failed to delete ticket channel:', err);
-            }
-        }, 3000);
     }
 });

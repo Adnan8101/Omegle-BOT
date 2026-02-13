@@ -110,10 +110,10 @@ export const SuggestionAction: Command = {
                 const suggestionMessage = await channel.messages.fetch(suggestion.message_id);
 
                 const statusColors: { [key: string]: number | null } = {
-                    'approved': Colors.Green,
-                    'denied': Colors.Red,
-                    'considered': Colors.Yellow, // Bright yellow for visibility
-                    'implemented': Colors.Green, // Green like approved
+                    'approved': 0x57F287,       // Green
+                    'denied': 0xED4245,          // Red
+                    'considered': 0xF5A623,      // Peach/Orange
+                    'implemented': 0x57F287,     // Green
                     'pending': null
                 };
 
@@ -125,7 +125,6 @@ export const SuggestionAction: Command = {
                 else if (dbStatus === 'denied') title += ' | Denied';
                 else if (dbStatus === 'considered') title += ' | Considered';
                 else if (dbStatus === 'implemented') title += ' | Implemented';
-                // For pending, just show "Suggestion #N" without status
 
                 const embed = new EmbedBuilder()
                     .setAuthor({
@@ -137,24 +136,17 @@ export const SuggestionAction: Command = {
                     .setFooter({ text: `Suggestion #${suggestionNumber}` })
                     .setTimestamp();
 
+                // Apply the correct color based on status
+                const color = statusColors[dbStatus];
+                if (color !== null && color !== undefined) {
+                    embed.setColor(color);
+                }
+
                 if (response) {
                     embed.addFields({ name: 'Response', value: response });
                 }
 
                 await suggestionMessage.edit({ embeds: [embed] });
-
-                // Send DM to author
-                try {
-                    const suggestionAuthor = await guild.client.users.fetch(suggestion.author_id);
-                    const messageLink = `https://discord.com/channels/${guild.id}/${suggestion.channel_id}/${suggestion.message_id}`;
-
-                    await suggestionAuthor.send(
-                        `Your suggestion **#${suggestionNumber}** has been **${dbStatus}**.\n\nCheckout: ${messageLink}`
-                    );
-                } catch (dmError) {
-                    // User might have DMs disabled, that's okay
-                    console.log(`Could not DM user ${suggestion.author_id} about suggestion #${suggestionNumber}`);
-                }
             }
         } catch (e) {
             console.error('Failed to update suggestion message:', e);

@@ -1,6 +1,6 @@
 import { Context } from '../../core/context';
 import { mailService } from '../../services/mail/MailService';
-import { PermissionFlagsBits, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { PermissionFlagsBits, TextChannel, EmbedBuilder } from 'discord.js';
 import { Command } from '../../core/command';
 import { client } from '../../core/discord';
 import { TranscriptGenerator } from '../../services/mail/TranscriptGenerator';
@@ -30,12 +30,6 @@ export const Close: Command = {
 
         await mailService.closeTicket(ticket.ticket_id);
 
-        // Lock
-        if (ctx.inner.channel.isTextBased() && !ctx.inner.channel.isDMBased()) {
-            const channel = ctx.inner.channel as TextChannel;
-            await channel.permissionOverwrites.edit(ctx.inner.guild.roles.everyone, { SendMessages: false });
-        }
-
         // Generate Transcript
         const messages = await mailService.getTicketMessages(ticket.ticket_id);
         const html = TranscriptGenerator.generateHTML(messages as any, ticket.ticket_id, ctx.inner.guild.name);
@@ -44,8 +38,19 @@ export const Close: Command = {
         if (config?.transcript_channel_id) {
             const tChannel = client.channels.cache.get(config.transcript_channel_id) as TextChannel;
             if (tChannel) {
+                const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
+                const transcriptEmbed = new EmbedBuilder()
+                    .setColor(0x2B2D31)
+                    .setDescription(
+                        `${TICK} **Ticket Closed**\n\n` +
+                        `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +
+                        `**Closed by:** <@${ctx.authorId}>\n` +
+                        `**Ticket ID:** ${ticket.ticket_id}`
+                    )
+                    .setTimestamp();
+
                 await tChannel.send({
-                    content: `Ticket Closed: ${ticket.ticket_id}`,
+                    embeds: [transcriptEmbed],
                     files: [{
                         attachment: Buffer.from(html),
                         name: `transcript-${ticket.ticket_id}.html`
@@ -54,22 +59,16 @@ export const Close: Command = {
             }
         }
 
-        // Send close embed with delete button
-        const closeEmbed = new EmbedBuilder()
-            .setDescription(
-                `${TICK} **Ticket Closed**\\n\\n` +
-                `Transcript saved. Click below to delete this channel.`
-            );
+        await ctx.reply({ content: `${TICK} Ticket closed. Transcript saved. Channel will be deleted in 5 seconds.` });
 
-        const deleteRow = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`mail_delete_${ticket.ticket_id}`)
-                    .setLabel('Delete Channel')
-                    .setStyle(ButtonStyle.Danger)
-                    .setEmoji('🗑️')
-            );
-
-        await ctx.reply({ embeds: [closeEmbed], components: [deleteRow] });
+        // Auto-delete channel after 5 seconds
+        const channel = ctx.inner.channel as TextChannel;
+        setTimeout(async () => {
+            try {
+                await channel.delete();
+            } catch (err) {
+                console.error('Failed to delete ticket channel:', err);
+            }
+        }, 5000);
     }
 };

@@ -25,7 +25,10 @@ export const Whois: Command = {
 
         const hasRole = await hasModRole(ctx.guildId, ctx.inner.member);
 
-        if (!hasPerm && !hasRole) return;
+        if (!hasPerm && !hasRole) {
+            await ctx.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+            return;
+        }
 
         const targetInput = args[0] || ctx.authorId;
         const targetUser = await Resolver.getUser(targetInput);
@@ -65,7 +68,7 @@ export const Whois: Command = {
         const embed = new EmbedBuilder()
             .setThumbnail(targetUser.displayAvatarURL())
             .setDescription(
-                `${TICK} **${targetUser.tag}**\n\n` +
+                `${TICK} **${targetUser.username}**\n\n` +
                 `@${targetUser.username}\n\n` +
                 `**Joined**\n` +
                 `${joined ? `<t:${joined}:f>` : 'Not in server'}\n` +
@@ -115,7 +118,7 @@ export const Whois: Command = {
                     if (!logs || logs.length === 0) {
                         const modlogsEmbed = new EmbedBuilder()
                             .setDescription(
-                                `${TICK} **${targetUser.tag}**\n\n` +
+                                `${TICK} **${targetUser.username}**\n\n` +
                                 `Clean record • No history`
                             );
 
@@ -148,7 +151,7 @@ export const Whois: Command = {
 
                     const modlogsEmbed = new EmbedBuilder()
                         .setDescription(
-                            `${TICK} **${targetUser.tag}**\n\n` +
+                            `${TICK} **${targetUser.username}**\n\n` +
                             `**Status:** ${status} • **Cases:** ${logs.length}\n` +
                             `**Case IDs:** ${allCaseIds}\n\n` +
                             `${logRows}`

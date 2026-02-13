@@ -67,7 +67,7 @@ export const InRole: Command = {
 
         // Create paginated list
         const memberList = Array.from(membersWithRole.values())
-            .map(m => `• ${m.user.tag} (${m.user.id})`)
+            .map(m => `• ${m.user.username} (${m.user.id})`)
             .slice(0, 20); // Limit to first 20 to avoid embed limits
 
         const showingNote = membersWithRole.size > 20 ? `\n\n*Showing first 20 of ${membersWithRole.size} members*` : '';

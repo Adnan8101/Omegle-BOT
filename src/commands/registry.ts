@@ -31,6 +31,7 @@ import { Purge } from './moderation/Purge';
 import { RoleCommand } from './moderation/Role';
 import { InRole } from './moderation/InRole';
 import { AutoDrag } from './moderation/AutoDrag';
+import { Steal } from './moderation/Steal';
 
 import { SetupMail } from './admin/SetupMail';
 import { DeleteSetup } from './admin/DeleteSetup';
@@ -101,6 +102,7 @@ export const CommandRegistry: Record<string, Command> = {
     'inrole': InRole,
     'ad': AutoDrag,
     'autodrag': AutoDrag,
+    'steal': Steal,
 
     // AFK Commands
     'afk': Afk,

@@ -76,7 +76,7 @@ export const Mute: Command = {
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} **Muted** ${targetUser.tag}\n` +
+                    `${TICK} **Muted** ${targetUser.username}\n` +
                     `**Duration:** ${durationDisplay}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`

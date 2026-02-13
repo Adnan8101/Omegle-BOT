@@ -39,7 +39,7 @@ export const Dm: Command = {
             await targetUser.send(`**Message from ${ctx.inner.guild?.name}:**\n${messageContent}`);
 
             const embed = new EmbedBuilder()
-                .setDescription(`${TICK} **DM Sent**\n\nSent to **${targetUser.tag}**`);
+                .setDescription(`${TICK} **DM Sent**\n\nSent to **${targetUser.username}**`);
 
             await ctx.reply({ embeds: [embed] });
 
@@ -47,7 +47,7 @@ export const Dm: Command = {
             await ModLogger.log(ctx.inner.guild!, ctx.inner.member.user as User, targetUser, 'DM', messageContent);
         } catch (err: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} **DM Failed**\n\nFailed to DM **${targetUser.tag}**. DMs might be closed.`);
+                .setDescription(`${CROSS} **DM Failed**\n\nFailed to DM **${targetUser.username}**. DMs might be closed.`);
             await ctx.reply({ embeds: [embed] });
         }
     }

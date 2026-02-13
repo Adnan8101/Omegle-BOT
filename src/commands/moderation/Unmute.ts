@@ -46,7 +46,7 @@ export const Unmute: Command = {
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} **Unmuted** ${targetUser.tag}\n` +
+                    `${TICK} **Unmuted** ${targetUser.username}\n` +
                     `**Reason:** ${reason}`
                 );
 

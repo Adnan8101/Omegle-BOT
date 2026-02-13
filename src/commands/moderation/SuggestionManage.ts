@@ -103,11 +103,11 @@ export const SuggestionManage: Command = {
                 };
 
                 const statusColors: { [key: string]: number } = {
-                    'approved': Colors.Green,
-                    'declined': Colors.Red,
-                    'considered': Colors.Yellow,
-                    'implemented': Colors.Purple,
-                    'pending': Colors.Blue
+                    'approved': 0x57F287,       // Green
+                    'declined': 0xED4245,        // Red
+                    'considered': 0xF5A623,      // Peach/Orange
+                    'implemented': 0x57F287,     // Green
+                    'pending': 0x5865F2          // Blurple
                 };
 
                 const author = await guild.members.fetch(suggestion.author_id).catch(() => null);
@@ -120,8 +120,9 @@ export const SuggestionManage: Command = {
                         name: author?.user.username || 'Unknown User',
                         iconURL: author?.user.displayAvatarURL() || undefined
                     })
-                    .setTitle(`💡 Suggestion #${suggestionNumber}`)
+                    .setTitle(`Suggestion #${suggestionNumber}`)
                     .setDescription(suggestion.suggestion)
+                    .setColor(statusColors[newStatus] ?? 0x2B2D31)
                     .addFields({ name: 'Status', value: `${statusEmoji[newStatus]} **${newStatus.toUpperCase()}**`, inline: true })
                     .setFooter({ text: `Reviewed by ${interaction.user.username}` })
                     .setTimestamp();

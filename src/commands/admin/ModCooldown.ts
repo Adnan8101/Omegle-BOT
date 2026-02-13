@@ -66,7 +66,7 @@ export const ModCooldown: Command = {
                     `During this time, rate limits will not apply to your moderation actions.`
                 );
             } catch (dmError) {
-                console.log(`Could not DM user ${targetUser.tag} about cooldown grant`);
+                console.log(`Could not DM user ${targetUser.username} about cooldown grant`);
             }
 
             await ctx.reply({

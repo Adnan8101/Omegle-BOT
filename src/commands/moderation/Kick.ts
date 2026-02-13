@@ -51,7 +51,7 @@ export const Kick: Command = {
 
             const embed = new EmbedBuilder()
                 .setDescription(
-                    `${TICK} **Kicked** ${targetUser.tag}\n` +
+                    `${TICK} **Kicked** ${targetUser.username}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`
                 );

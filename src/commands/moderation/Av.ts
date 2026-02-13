@@ -33,7 +33,7 @@ export const Av: Command = {
         const avatarUrl = targetUser.displayAvatarURL({ size: 4096, extension: 'png' }); // High res
 
         const embed = new EmbedBuilder()
-            .setDescription(`**Avatar** • ${targetUser.tag}`)
+            .setDescription(`**Avatar** • ${targetUser.username}`)
             .setImage(avatarUrl);
 
         await ctx.reply({ embeds: [embed] });

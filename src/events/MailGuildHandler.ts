@@ -12,15 +12,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
 
     if (ticket.status === 'closed') return;
 
+    // Staff messages starting with ! are internal commands — silently ignore
     if (message.content.trim().startsWith('!')) {
-        await mailService.logMessage(ticket.ticket_id, 'staff', message.author.id, message.content, {
-            attachments: message.attachments.map(a => ({ url: a.url, name: a.name, contentType: a.contentType })),
-            embeds: message.embeds.map(e => e.toJSON()),
-            author_name: message.author.username,
-            author_avatar: message.author.displayAvatarURL(),
-            author_role_color: message.member?.displayHexColor || '#f2f3f5'
-        });
-        await message.react('🚫');
         return;
     }
 

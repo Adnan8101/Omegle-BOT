@@ -71,11 +71,11 @@ export const events = {
             // Handle giveaway prefix commands
             if (message.content.startsWith('!')) {
                 const cmdMatch = message.content.slice(1).split(/\s+/)[0]?.toLowerCase();
-                console.log(`[Events] Prefix command detected: !${cmdMatch} by ${message.author?.tag || 'unknown'} in #${(message.channel as any)?.name || 'unknown'} (${message.guild?.name || 'DM'})`);
+                console.log(`[Events] Prefix command detected: !${cmdMatch} by ${message.author?.username || 'unknown'} in #${(message.channel as any)?.name || 'unknown'} (${message.guild?.name || 'DM'})`);
                 
                 if (prefixCommandMap[cmdMatch]) {
                     try {
-                        console.log(`[Events] Executing giveaway prefix command: ${cmdMatch} by ${message.author?.tag || 'unknown'} in ${message.guild?.name || 'DM'}`);
+                        console.log(`[Events] Executing giveaway prefix command: ${cmdMatch} by ${message.author?.username || 'unknown'} in ${message.guild?.name || 'DM'}`);
                         
                         // Validate message object has required properties
                         if (!message.channel) {
@@ -105,15 +105,19 @@ export const events = {
 
             // Log if it's a prefix command
             if (message.content.startsWith('!')) {
-                console.log(`[Events] Routing prefix command to router: "${message.content}" by ${message.author.tag}`);
+                console.log(`[Events] Routing prefix command to router: "${message.content}" by ${message.author.username}`);
             }
 
-            // Process all handlers in parallel for faster response
-            Promise.all([
+            // Process all handlers in parallel — use allSettled so one failure doesn't kill others
+            Promise.allSettled([
                 router.execute(ctx),
                 stickyService.trigger(ctx),
                 afkService.handleMessage(message)
-            ]).catch(err => console.error('[Events] Error in message handlers:', err));
+            ]).then(results => {
+                for (const r of results) {
+                    if (r.status === 'rejected') console.error('[Events] Handler error:', r.reason);
+                }
+            });
         });
 
         // Giveaway reaction handlers

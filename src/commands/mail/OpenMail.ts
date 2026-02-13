@@ -45,7 +45,7 @@ export const OpenMail: Command = {
         const cat = categories[0];
         await mailService.createPendingTicket(ctx.guildId, targetUser.id, cat.id);
 
-        await ctx.reply({ content: `Initiated ticket creation for ${targetUser.tag}. They (or you) need to finish setup via DM or I can force it. (Force implementation pending)`, ephemeral: true });
+        await ctx.reply({ content: `Initiated ticket creation for ${targetUser.username}. They (or you) need to finish setup via DM or I can force it. (Force implementation pending)`, ephemeral: true });
 
         // In a real OpenMail, we would create the channel immediately.
         // For now, this is sufficient to test.

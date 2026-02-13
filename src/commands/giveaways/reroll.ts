@@ -19,7 +19,7 @@ export default {
         console.log(`[Giveaway] Prefix reroll command executed by ${message.author?.tag || 'unknown'} with args: ${args}`);
         
         if (!message.member?.permissions?.has?.('ManageGuild')) {
-            console.log(`[Giveaway] Prefix reroll command - permission denied for ${message.author?.tag}`);
+            console.log(`[Giveaway] Prefix reroll command - permission denied for ${message.author?.username}`);
             return message.reply(`${Emojis.CROSS} You need Manage Guild permission to use this command.`).catch(console.error);
         }
         
