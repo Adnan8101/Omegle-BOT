@@ -25,22 +25,44 @@ export default {
     },
     async run(ctx: any, messageId: string) {
         try {
-            const service = new GiveawayService(ctx.client);
+            // Get client from ctx or ctx.client
+            const client = ctx.client || (ctx.inner && ctx.inner.client) || (ctx.guild && ctx.guild.client);
+            if (!client) {
+                throw new Error('Client not available');
+            }
+            
+            const service = new GiveawayService(client);
             await service.endGiveaway(messageId);
-            const editFn = ctx.editReply || ctx.reply;
-            const reply = await editFn?.({ content: `${Emojis.TICK} Giveaway ended.`, flags: [MessageFlags.Ephemeral], fetchReply: true });
+            
+            // Handle reply for both interaction and message contexts
+            let reply;
+            if (ctx.editReply) {
+                // Interaction context
+                reply = await ctx.editReply({ content: `${Emojis.TICK} Giveaway ended.`, flags: [MessageFlags.Ephemeral] });
+            } else if (ctx.reply) {
+                // Message context
+                reply = await ctx.reply({ content: `${Emojis.TICK} Giveaway ended.` });
+            }
+            
             setTimeout(async () => {
                 try {
                     if (ctx.deleteReply) {
                         await ctx.deleteReply().catch(() => {});
-                    } else if (reply?.delete) {
+                    } else if (reply && typeof reply.delete === 'function') {
                         await reply.delete().catch(() => {});
                     }
                 } catch (e) {}
             }, 3000);
         } catch (error) {
-            const editFn = ctx.editReply || ctx.reply;
-            await editFn?.({ content: `${Emojis.CROSS} Failed to end giveaway. Check ID.`, flags: [MessageFlags.Ephemeral] });
+            try {
+                if (ctx.editReply) {
+                    await ctx.editReply({ content: `${Emojis.CROSS} Failed to end giveaway. Check ID.`, flags: [MessageFlags.Ephemeral] });
+                } else if (ctx.reply) {
+                    await ctx.reply({ content: `${Emojis.CROSS} Failed to end giveaway. Check ID.` });
+                }
+            } catch (e) {
+                console.error('Failed to send error message:', e);
+            }
         }
     }
 };

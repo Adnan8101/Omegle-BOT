@@ -24,27 +24,45 @@ export default {
     },
     async run(ctx: any, messageId: string) {
         try {
-            const service = new GiveawayService(ctx.client);
+            const client = ctx.client || (ctx.inner && ctx.inner.client) || (ctx.guild && ctx.guild.client);
+            if (!client) throw new Error('Client not available');
+            
+            const service = new GiveawayService(client);
             const winners = await service.rerollGiveaway(messageId);
+            
             if (winners.length > 0) {
-                const editFn = ctx.editReply || ctx.reply;
-                const reply = await editFn?.({ content: `${Emojis.TICK} Successfully rerolled!`, flags: [MessageFlags.Ephemeral], fetchReply: true });
+                let reply;
+                if (ctx.editReply) {
+                    reply = await ctx.editReply({ content: `${Emojis.TICK} Successfully rerolled!`, flags: [MessageFlags.Ephemeral] });
+                } else if (ctx.reply) {
+                    reply = await ctx.reply({ content: `${Emojis.TICK} Successfully rerolled!` });
+                }
                 setTimeout(async () => {
                     try {
                         if (ctx.deleteReply) {
                             await ctx.deleteReply().catch(() => {});
-                        } else if (reply?.delete) {
+                        } else if (reply && typeof reply.delete === 'function') {
                             await reply.delete().catch(() => {});
                         }
                     } catch (e) {}
                 }, 3000);
             } else {
-                const editFn = ctx.editReply || ctx.reply;
-                await editFn?.({ content: `${Emojis.CROSS} Could not find a new winner.`, flags: [MessageFlags.Ephemeral] });
+                if (ctx.editReply) {
+                    await ctx.editReply({ content: `${Emojis.CROSS} Could not find a new winner.`, flags: [MessageFlags.Ephemeral] });
+                } else if (ctx.reply) {
+                    await ctx.reply({ content: `${Emojis.CROSS} Could not find a new winner.` });
+                }
             }
         } catch (error: any) {
-            const editFn = ctx.editReply || ctx.reply;
-            await editFn?.({ content: `${Emojis.CROSS} ${error.message || 'Failed to reroll.'}`, flags: [MessageFlags.Ephemeral] });
+            try {
+                if (ctx.editReply) {
+                    await ctx.editReply({ content: `${Emojis.CROSS} ${error.message || 'Failed to reroll.'}`, flags: [MessageFlags.Ephemeral] });
+                } else if (ctx.reply) {
+                    await ctx.reply({ content: `${Emojis.CROSS} ${error.message || 'Failed to reroll.'}` });
+                }
+            } catch (e) {
+                console.error('Failed to send error message:', e);
+            }
         }
     }
 };
