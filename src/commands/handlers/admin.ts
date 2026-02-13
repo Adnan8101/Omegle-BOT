@@ -22,6 +22,9 @@ export async function handleAdminCommand(interaction: ChatInputCommandInteractio
             const channel = interaction.options.getChannel('channel', true);
             args.push(channel.id);
         }
+    } else if (cmd === 'modlogsetup') {
+        const channel = interaction.options.getChannel('channel', true);
+        args.push(channel.id);
     } else if (cmd === 'cc' || cmd === 'modrole' || cmd === 'staffrole' || cmd === 'srmodrole' || cmd === 'wv_allowed_role') {
         const subcommand = interaction.options.getSubcommand();
         args.push(subcommand);

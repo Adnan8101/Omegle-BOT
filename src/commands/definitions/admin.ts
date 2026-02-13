@@ -145,7 +145,13 @@ export const suggestionconfigCommand = new SlashCommandBuilder()
             .setDescription('Show current suggestion configuration')
     );
 
+export const modlogsetupCommand = new SlashCommandBuilder()
+    .setName('modlogsetup')
+    .setDescription('Set the channel for moderation logs')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addChannelOption(opt => opt.setName('channel').setDescription('Channel for moderation logs').setRequired(true));
+
 export const adminCommands = [
     setupmailCommand, deletesetupCommand, ccCommand, modroleCommand, 
-    staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand
+    staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand, modlogsetupCommand
 ];

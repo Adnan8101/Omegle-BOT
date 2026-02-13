@@ -27,7 +27,7 @@ const afkCommands = ['afk', 'afkclear', 'afklist', 'afksettings'];
 const mailCommands = ['openmail', 'close', 'claim', 'unclaim', 'ticketpanel',
     'claimedtickets', 'inactivemails', 'ticketclear'];
 const adminCommands = ['setupmail', 'deletesetup', 'cc', 'modrole', 'staffrole', 'srmodrole',
-    'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig'];
+    'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig', 'modlogsetup'];
 const utilityCommands = ['vclogs', 'clogs', 'wv', 'help'];
 const giveawayCommandNames = ['gcreate', 'gstart', 'gend', 'greroll', 'gcancel',
     'gdelete', 'glist', 'ghistory', 'grefresh', 'gresume', 'gstop', 'gschedule'];
