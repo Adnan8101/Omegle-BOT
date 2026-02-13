@@ -107,7 +107,15 @@ export const Whois: Command = {
 
         collector.on('collect', async (interaction: any) => {
             try {
-                if (interaction.customId.st${targetUser.tag}**\n\n` +
+                if (interaction.customId.startsWith('whois_modlogs_')) {
+                    // Show modlogs
+                    const userId = interaction.customId.split('_')[2];
+                    const logs = await modService.getLogs(ctx.guildId, userId);
+
+                    if (!logs || logs.length === 0) {
+                        const modlogsEmbed = new EmbedBuilder()
+                            .setDescription(
+                                `${TICK} **${targetUser.tag}**\n\n` +
                                 `Clean record • No history`
                             );
 
@@ -205,15 +213,7 @@ export const Whois: Command = {
                     await interaction.reply({ 
                         content: 'Use `!mute <user> <duration> <reason>` to add a manual mute.', 
                         ephemeral: true 
-                   
-                        .addComponents(
-                            new ButtonBuilder()
-                                .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
-                                .setLabel('Back')
-                                .setStyle(ButtonStyle.Secondary)
-                        );
-
-                    await interaction.update({ embeds: [modlogsEmbed], components: [backRow] });
+                    });
 
                 } else if (interaction.customId.startsWith('whois_back_')) {
                     // Show original whois
