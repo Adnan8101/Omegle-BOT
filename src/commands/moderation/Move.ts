@@ -76,7 +76,8 @@ export const Move: Command = {
         } else {
             // Option 2: Move to specific VC
             const channel = await Resolver.getChannel(ctx.inner.guild!, channelInput);
-            console.log(`[DEBUG] Resolved channel: ${channel?.id} - ${channel?.name || 'null'}`);
+            const channelName = channel && 'name' in channel ? channel.name : 'unknown';
+            console.log(`[DEBUG] Resolved channel: ${channel?.id} - ${channelName}`);
             if (!channel || (channel.type !== ChannelType.GuildVoice && channel.type !== ChannelType.GuildStageVoice)) {
                 await ctx.reply({ content: '<:cross:1469273232929456314> Voice channel not found.', ephemeral: true });
                 return;
