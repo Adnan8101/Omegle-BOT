@@ -63,6 +63,8 @@ export const Move: Command = {
 
         const channelInput = args.slice(argsOffset).join(' '); // Remaining args
 
+        console.log(`[DEBUG] Move command: target=${targetMember.user.tag}, channelInput="${channelInput}", argsOffset=${argsOffset}, args=[${args.join(',')}]`);
+
         if (!channelInput) {
             // Option 1: Move to current VC
             if (!requesterMember.voice.channel) {
@@ -70,9 +72,11 @@ export const Move: Command = {
                 return;
             }
             targetChannel = requesterMember.voice.channel;
+            console.log(`[DEBUG] Using requester's VC: ${targetChannel.name}`);
         } else {
             // Option 2: Move to specific VC
             const channel = await Resolver.getChannel(ctx.inner.guild!, channelInput);
+            console.log(`[DEBUG] Resolved channel: ${channel?.id} - ${channel?.name || 'null'}`);
             if (!channel || (channel.type !== ChannelType.GuildVoice && channel.type !== ChannelType.GuildStageVoice)) {
                 await ctx.reply({ content: '<:cross:1469273232929456314> Voice channel not found.', ephemeral: true });
                 return;
@@ -117,8 +121,10 @@ export const Move: Command = {
         try {
             await targetMember.voice.setChannel(targetChannel.id);
             
-            // Reply with proper message
-            await ctx.reply({ content: `${targetMember.user.username} dragged to ${targetChannel.name}` });
+            // Reply with proper message - very explicit to avoid any confusion
+            const replyMessage = `${targetMember.user.username} dragged to ${targetChannel.name}`;
+            console.log(`[DEBUG] Sending reply: "${replyMessage}"`);
+            await ctx.reply({ content: replyMessage });
 
             // Log action
             await ModLogger.log(ctx.inner.guild!, ctx.inner.member.user as User, targetMember.user, 'Move', null, {
