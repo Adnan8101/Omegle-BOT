@@ -70,6 +70,25 @@ export const staffroleCommand = new SlashCommandBuilder()
             .setDescription('Show all staff roles')
     );
 
+export const srmodroleCommand = new SlashCommandBuilder()
+    .setName('srmodrole')
+    .setDescription('Manage senior moderator roles')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(sub =>
+        sub.setName('add')
+            .setDescription('Add a senior moderator role')
+            .addRoleOption(opt => opt.setName('role').setDescription('Role to add').setRequired(true))
+    )
+    .addSubcommand(sub =>
+        sub.setName('remove')
+            .setDescription('Remove a senior moderator role')
+            .addRoleOption(opt => opt.setName('role').setDescription('Role to remove').setRequired(true))
+    )
+    .addSubcommand(sub =>
+        sub.setName('show')
+            .setDescription('Show all senior moderator roles')
+    );
+
 export const wvAllowedRoleCommand = new SlashCommandBuilder()
     .setName('wv_allowed_role')
     .setDescription('Manage which roles can use the !wv command')
@@ -128,5 +147,5 @@ export const suggestionconfigCommand = new SlashCommandBuilder()
 
 export const adminCommands = [
     setupmailCommand, deletesetupCommand, ccCommand, modroleCommand, 
-    staffroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand
+    staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand
 ];

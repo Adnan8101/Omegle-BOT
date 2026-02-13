@@ -25,6 +25,18 @@ fi
 echo "✅ Build completed successfully"
 echo ""
 
+# Deploy slash commands
+echo "🔧 Registering slash commands..."
+npm run deploy
+
+if [ $? -ne 0 ]; then
+    echo "❌ Command registration failed!"
+    exit 1
+fi
+
+echo "✅ Slash commands registered"
+echo ""
+
 # Check if PM2 is installed
 if ! command -v pm2 &> /dev/null; then
     echo "❌ PM2 is not installed. Please install it with: npm install -g pm2"
