@@ -1,4 +1,4 @@
-import { Role } from 'discord.js';
+import { Role, Channel } from 'discord.js';
 
 /**
  * Calculate similarity between two strings using Levenshtein distance
@@ -84,4 +84,28 @@ export function isExactRoleMatch(input: string, role: Role): boolean {
     if (input.toLowerCase() === role.name.toLowerCase()) return true;
     
     return false;
+}
+
+/**
+ * Find the best matching channel from a collection based on input
+ */
+export function findBestChannelMatch(
+    input: string,
+    channels: Channel[],
+    threshold: number = 0.6
+): { channel: Channel; similarity: number } | null {
+    let bestMatch: { channel: Channel; similarity: number } | null = null;
+    
+    for (const channel of channels) {
+        if (!('name' in channel)) continue;
+        const similarity = calculateSimilarity(input, channel.name);
+        
+        if (similarity >= threshold) {
+            if (!bestMatch || similarity > bestMatch.similarity) {
+                bestMatch = { channel, similarity };
+            }
+        }
+    }
+    
+    return bestMatch;
 }

@@ -81,17 +81,43 @@ export const Move: Command = {
         }
 
         // Logic Check: Check if author has permission in target VC
-        if (!targetChannel.permissionsFor(requesterMember).has(PermissionFlagsBits.MoveMembers) && !requesterMember.permissions.has(PermissionFlagsBits.MoveMembers)) {
-            if (!targetChannel.permissionsFor(requesterMember).has(PermissionFlagsBits.Connect)) {
-                await ctx.reply({ content: '<:cross:1469273232929456314> You do not have access to the target voice channel.', ephemeral: true });
-                return;
+        const authorPerms = targetChannel.permissionsFor(requesterMember);
+        if (!authorPerms) {
+            if (ctx.inner instanceof Message) {
+                await ctx.inner.react('🔇').catch(() => {});
             }
+            return;
+        }
+
+        // Check if author can connect to target VC
+        if (!authorPerms.has(PermissionFlagsBits.Connect)) {
+            if (ctx.inner instanceof Message) {
+                await ctx.inner.react('🔇').catch(() => {});
+            }
+            return;
+        }
+
+        // Check if author can speak in target VC (for voice channels)
+        if (targetChannel.type === ChannelType.GuildVoice && !authorPerms.has(PermissionFlagsBits.Speak)) {
+            if (ctx.inner instanceof Message) {
+                await ctx.inner.react('🔇').catch(() => {});
+            }
+            return;
+        }
+
+        // Check if bot has permission to move members
+        const botPerms = targetChannel.permissionsFor(ctx.inner.guild!.members.me!);
+        if (!botPerms || !botPerms.has(PermissionFlagsBits.MoveMembers)) {
+            if (ctx.inner instanceof Message) {
+                await ctx.inner.react('🔇').catch(() => {});
+            }
+            return;
         }
 
         try {
             await targetMember.voice.setChannel(targetChannel.id);
             const embed = new EmbedBuilder()
-                .setDescription(`${TICK} **Moved** ${targetMember.user.username}\n\nDragged to **${targetChannel.name}**`);
+                .setDescription(`${TICK} **${targetMember.user.username}** has been dragged to **${targetChannel.name}**`);
 
             await ctx.reply({ embeds: [embed] });
 

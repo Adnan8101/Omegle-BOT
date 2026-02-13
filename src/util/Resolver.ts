@@ -1,4 +1,5 @@
-import { Guild, GuildMember, User, Channel } from 'discord.js';
+import { Guild, GuildMember, User, Channel, ChannelType } from 'discord.js';
+import { findBestChannelMatch } from './fuzzyMatch';
 
 export class Resolver {
     static async getUser(input: string): Promise<User | null> {
@@ -66,7 +67,17 @@ export class Resolver {
         // ID
         if (/^\d{17,19}$/.test(input)) return await guild.channels.fetch(input).catch(() => null);
 
-        // Name search (cache)
-        return guild.channels.cache.find(c => c.name.toLowerCase() === input.toLowerCase()) || null;
+        // Exact name search (cache)
+        const exactMatch = guild.channels.cache.find(c => c.name.toLowerCase() === input.toLowerCase());
+        if (exactMatch) return exactMatch;
+
+        // Fuzzy name search for voice channels
+        const voiceChannels = guild.channels.cache.filter(c => 
+            c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice
+        );
+        const fuzzyMatch = findBestChannelMatch(input, Array.from(voiceChannels.values()));
+        if (fuzzyMatch) return fuzzyMatch.channel;
+
+        return null;
     }
 }

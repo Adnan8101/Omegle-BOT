@@ -84,6 +84,7 @@ export const CommandRegistry: Record<string, Command> = {
     'modlogs': ModLogs,
     'modstats': ModStats,
     'whois': Whois,
+    'w': Whois,
     'caseinfo': CaseInfo,
     'av': Av,
     'banword': BanWord,

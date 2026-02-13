@@ -1,7 +1,7 @@
 import { Context } from '../../core/context';
 import { modService } from '../../services/moderation/ModerationService';
 import { Resolver } from '../../util/Resolver';
-import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
 import { hasModRole } from '../../util/modRole';
@@ -127,7 +127,33 @@ export const ModStats: Command = {
                     `Total: **${timeLabel ? filteredTotal : total}**`
                 );
 
-            await ctx.reply({ embeds: [embed] });
+            const row = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`delete_modstats_${ctx.authorId}`)
+                        .setLabel('Delete')
+                        .setEmoji('🗑️')
+                        .setStyle(ButtonStyle.Danger)
+                );
+
+            const message = await ctx.reply({ embeds: [embed], components: [row] });
+
+            // Handle delete button
+            const collector = message.createMessageComponentCollector({
+                filter: (i: any) => i.customId.startsWith('delete_modstats_') && i.user.id === ctx.authorId,
+                time: 60000
+            });
+
+            collector.on('collect', async (interaction: any) => {
+                try {
+                    await interaction.update({ content: '✓ Message deleted', embeds: [], components: [] });
+                    setTimeout(() => {
+                        interaction.deleteReply().catch(() => { });
+                    }, 2000);
+                } catch (e) {
+                    // Already deleted
+                }
+            });
 
         } catch (err: any) {
             await ctx.reply({ content: `Failed to fetch stats: ${err.message}`, ephemeral: true });
