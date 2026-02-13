@@ -35,7 +35,7 @@ export default {
             await service.endGiveaway(messageId);
             
             // Handle reply for both interaction and message contexts
-            let reply;
+            let reply: any = null;
             if (ctx.editReply) {
                 // Interaction context
                 reply = await ctx.editReply({ content: `${Emojis.TICK} Giveaway ended.`, flags: [MessageFlags.Ephemeral] });

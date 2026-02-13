@@ -31,7 +31,7 @@ export default {
             const winners = await service.rerollGiveaway(messageId);
             
             if (winners.length > 0) {
-                let reply;
+                let reply: any = null;
                 if (ctx.editReply) {
                     reply = await ctx.editReply({ content: `${Emojis.TICK} Successfully rerolled!`, flags: [MessageFlags.Ephemeral] });
                 } else if (ctx.reply) {
