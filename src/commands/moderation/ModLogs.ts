@@ -65,39 +65,18 @@ export const ModLogs: Command = {
                 return `#${log.case_number} ${log.action} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
             }).join('\n\n');
 
+            // Get all case IDs
+            const allCaseIds = logs.map(l => `#${l.case_number}`).join(', ');
+
             const embed = new EmbedBuilder()
                 .setDescription(
                     `${TICK} **${targetUser.tag}**\n\n` +
-                    `**Status:** ${status} • **Cases:** ${logs.length}\n\n` +
+                    `**Status:** ${status} • **Cases:** ${logs.length}\n` +
+                    `**Case IDs:** ${allCaseIds}\n\n` +
                     `${logRows}`
                 );
 
-            const row = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`delete_modlogs_${ctx.authorId}`)
-                        .setLabel('🗑️ Delete')
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-            const message = await ctx.reply({ embeds: [embed], components: [row], ephemeral: true });
-
-            // Handle delete button
-            const collector = message.createMessageComponentCollector({
-                filter: (i: any) => i.customId.startsWith('delete_modlogs_') && i.user.id === ctx.authorId,
-                time: 60000
-            });
-
-            collector.on('collect', async (interaction: any) => {
-                try {
-                    await interaction.update({ content: '✓ Message deleted', embeds: [], components: [] });
-                    setTimeout(() => {
-                        interaction.deleteReply().catch(() => { });
-                    }, 2000);
-                } catch (e) {
-                    // Already deleted
-                }
-            });
+            await ctx.reply({ embeds: [embed], ephemeral: true });
 
         } catch (err: any) {
             await ctx.reply({ content: `Failed to fetch logs: ${err.message}`, ephemeral: true });

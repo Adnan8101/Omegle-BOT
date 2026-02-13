@@ -143,10 +143,14 @@ export const Whois: Command = {
                         return `#${log.case_number} ${log.action} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
                     }).join('\n\n');
 
+                    // Get all case IDs
+                    const allCaseIds = logs.map(l => `#${l.case_number}`).join(', ');
+
                     const modlogsEmbed = new EmbedBuilder()
                         .setDescription(
                             `${TICK} **${targetUser.tag}**\n\n` +
-                            `**Status:** ${status} • **Cases:** ${logs.length}\n\n` +
+                            `**Status:** ${status} • **Cases:** ${logs.length}\n` +
+                            `**Case IDs:** ${allCaseIds}\n\n` +
                             `${logRows}`
                         );
 
@@ -161,57 +165,16 @@ export const Whois: Command = {
                     await interaction.update({ embeds: [modlogsEmbed], components: [backRow] });
 
                 } else if (interaction.customId.startsWith('whois_manuals_')) {
-                    // Show manuals
-                    const userId = interaction.customId.split('_')[2];
-                    const logs = await modService.getLogs(ctx.guildId, userId);
-                    const manuals = logs?.filter(l => l.action === 'mute') || [];
-
-                    if (manuals.length === 0) {
-                        const manualsEmbed = new EmbedBuilder()
-                            .setDescription(
-                                `${TICK} **${targetUser.tag}**\n\n` +
-                                `No manual mutes found`
-                            );
-
-                        const backRow = new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents(
-                                new ButtonBuilder()
-                                    .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
-                                    .setLabel('Back')
-                                    .setStyle(ButtonStyle.Secondary)
-                            );
-
-                        await interaction.update({ embeds: [manualsEmbed], components: [backRow] });
-                        return;
-                    }
-
-                    const manualRows = manuals.slice(0, 8).map(log => {
-                        const timestamp = Math.floor(new Date(log.created_at).getTime() / 1000);
-                        const status = log.active ? '🔴 Active' : '✅ Completed';
-                        return `#${log.case_number} ${status} • <t:${timestamp}:R>\n${log.reason || 'No reason'}`;
-                    }).join('\n\n');
-
-                    const manualsEmbed = new EmbedBuilder()
-                        .setDescription(
-                            `${TICK} **${targetUser.tag}**\n\n` +
-                            `**Manual Mutes:** ${manuals.length}\n\n` +
-                            `${manualRows}`
-                        );
-
-                    const backRow = new ActionRowBuilder<ButtonBuilder>()
-                        .addComponents(
-                            new ButtonBuilder()
-                                .setCustomId(`whois_back_${targetUser.id}_${ctx.authorId}`)
-                                .setLabel('Back')
-                                .setStyle(ButtonStyle.Secondary)
-                        );
-
-                    await interaction.update({ embeds: [manualsEmbed], components: [backRow] });
+                    // Under development
+                    await interaction.reply({ 
+                        content: '⚠️ This feature is currently under development.', 
+                        ephemeral: true 
+                    });
 
                 } else if (interaction.customId.startsWith('whois_addmanual_')) {
-                    // Add manual functionality placeholder
+                    // Under development
                     await interaction.reply({ 
-                        content: 'Use `!mute <user> <duration> <reason>` to add a manual mute.', 
+                        content: '⚠️ This feature is currently under development.', 
                         ephemeral: true 
                     });
 

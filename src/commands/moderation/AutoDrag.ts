@@ -111,7 +111,7 @@ export const AutoDrag: Command = {
             try {
                 await targetMember.voice.setChannel(targetVoiceChannel);
                 await message.react('✅');
-                await message.reply(`Moved ${targetMember.user.username} to ${targetVoiceChannel.name}`);
+                await message.reply(`${targetMember.user.username} dragged to ${targetVoiceChannel.name}`);
             } catch (error) {
                 await message.react('❌');
                 await message.reply('Failed to move user. Check permissions.');

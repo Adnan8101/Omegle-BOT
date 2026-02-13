@@ -117,10 +117,8 @@ export const Move: Command = {
         try {
             await targetMember.voice.setChannel(targetChannel.id);
             
-            // React with checkmark
-            if (ctx.inner instanceof Message) {
-                await ctx.inner.react('✅').catch(() => {});
-            }
+            // Reply with proper message
+            await ctx.reply({ content: `${targetMember.user.username} dragged to ${targetChannel.name}` });
 
             // Log action
             await ModLogger.log(ctx.inner.guild!, ctx.inner.member.user as User, targetMember.user, 'Move', null, {
