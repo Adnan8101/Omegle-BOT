@@ -1,0 +1,521 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Sticky {
+  sticky_id        String    @id @default(uuid())
+  guild_id         String
+  channel_id       String
+  content          String
+  last_message_id  String?
+  enabled          Boolean   @default(true)
+  cooldown_seconds Int       @default(0)
+  last_posted_at   DateTime?
+  created_by       String
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([guild_id, channel_id])
+  @@map("stickies")
+}
+
+model Permission {
+  id           String @id @default(uuid())
+  guild_id     String
+  subject_type String // 'user' | 'role'
+  subject_id   String
+  permission   String
+  effect       String // 'allow' | 'deny'
+
+  @@index([guild_id, subject_type, subject_id])
+  @@map("permissions")
+}
+
+model GuildCaseCounter {
+  guild_id         String @id
+  last_case_number Int    @default(0)
+
+  @@map("guild_case_counter")
+}
+
+model ModerationCase {
+  id               String   @id @default(uuid())
+  guild_id         String
+  case_number      Int
+  action           String
+  target_id        String
+  moderator_id     String
+  reason           String?
+  duration_seconds Int?
+  created_at       DateTime @default(now())
+  active           Boolean  @default(true)
+
+  @@index([guild_id, case_number])
+  @@index([guild_id, target_id])
+  @@index([guild_id, moderator_id])
+  @@index([created_at])
+  @@map("moderation_cases")
+}
+
+model ModeratorStats {
+  id           String @id @default(uuid())
+  guild_id     String
+  moderator_id String
+  bans         Int    @default(0)
+  kicks        Int    @default(0)
+  mutes        Int    @default(0)
+  unmutes      Int    @default(0)
+  warns        Int    @default(0)
+
+  @@unique([guild_id, moderator_id])
+  @@map("moderator_stats")
+}
+
+model UserModerationStats {
+  id       String @id @default(uuid())
+  guild_id String
+  user_id  String
+  bans     Int    @default(0)
+  kicks    Int    @default(0)
+  mutes    Int    @default(0)
+  warns    Int    @default(0)
+
+  @@unique([guild_id, user_id])
+  @@map("user_moderation_stats")
+}
+
+model AfkUser {
+  guild_id  String
+  user_id   String
+  reason    String?
+  timestamp DateTime @default(now())
+
+  @@id([guild_id, user_id])
+  @@map("afk_users")
+}
+
+model AfkSettings {
+  guild_id         String @id
+  allowed_channels String // JSON string
+  allowed_roles    String // JSON string
+  enabled          Int    @default(1)
+
+  @@map("afk_settings")
+}
+
+model BannedWord {
+  id         String   @id @default(uuid())
+  guild_id   String
+  word       String
+  added_by   String
+  created_at DateTime @default(now())
+
+  @@map("banned_words")
+}
+
+model VoiceLog {
+  id               String    @id @default(uuid())
+  guild_id         String
+  user_id          String
+  channel_id       String
+  joined_at        DateTime  @default(now())
+  left_at          DateTime?
+  duration_seconds Int?
+
+  @@map("voice_logs")
+}
+
+model ChatLog {
+  id             String   @id @default(uuid())
+  guild_id       String
+  user_id        String
+  channel_id     String
+  message_id     String
+  content_length Int?
+  created_at     DateTime @default(now())
+
+  @@map("chat_logs")
+}
+
+model MailConfig {
+  guild_id              String  @id
+  enabled               Boolean @default(false)
+  inbox_category_id     String
+  transcript_channel_id String?
+  ask_confirmation      Boolean? @default(false)
+  closed_category_id    String?
+
+  @@map("mail_config")
+}
+
+model MailCategory {
+  id                  String   @id @default(uuid())
+  guild_id            String
+  name                String
+  channel_category_id String
+  staff_role_ids      String[]
+  auto_close_hours    Int?
+  created_at          DateTime @default(now())
+
+  @@map("mail_categories")
+}
+
+model Ticket {
+  ticket_id             String    @id @default(uuid())
+  guild_id              String
+  user_id               String
+  category_id           String
+  channel_id            String?
+  status                String    @default("pending") // 'pending' | 'open' | 'claimed' | 'closed'
+  claimed_by            String?
+  opened_at             DateTime  @default(now())
+  closed_at             DateTime?
+  last_user_message_at  DateTime?
+  last_staff_message_at DateTime?
+
+  @@index([guild_id, user_id])
+  @@index([guild_id, status])
+  @@index([claimed_by])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id                String   @id @default(uuid())
+  ticket_id         String
+  sender_type       String   // 'user' | 'staff'
+  sender_id         String
+  content           String
+  attachments       Json?
+  embeds            Json?
+  author_name       String?
+  author_avatar     String?
+  author_role_color String?
+  created_at        DateTime @default(now())
+
+  @@index([ticket_id])
+  @@map("ticket_messages")
+}
+
+model CustomCommand {
+  id         String   @id @default(uuid())
+  guild_id   String
+  name       String
+  role_id    String
+  created_by String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([guild_id, name])
+  @@index([guild_id])
+  @@map("custom_commands")
+}
+
+model ModRole {
+  id         String   @id @default(uuid())
+  guild_id   String
+  role_id    String
+  added_by   String
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, role_id])
+  @@index([guild_id])
+  @@map("mod_roles")
+}
+
+model StaffRole {
+  id         String   @id @default(uuid())
+  guild_id   String
+  role_id    String
+  added_by   String
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, role_id])
+  @@index([guild_id])
+  @@map("staff_roles")
+}
+
+model SrModRole {
+  id         String   @id @default(uuid())
+  guild_id   String
+  role_id    String
+  added_by   String
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, role_id])
+  @@index([guild_id])
+  @@map("sr_mod_roles")
+}
+
+model BanTracking {
+  id           String   @id @default(uuid())
+  guild_id     String
+  moderator_id String
+  target_id    String
+  reason       String?
+  risk_level   String   @default("medium") // low, medium, high
+  alert_sent   Boolean  @default(false)
+  timestamp    DateTime @default(now())
+
+  @@index([guild_id, moderator_id, timestamp])
+  @@map("ban_tracking")
+}
+
+model ModeratorCooldown {
+  guild_id       String
+  moderator_id   String
+  cooldown_until DateTime
+  reason         String?
+  applied_at     DateTime @default(now())
+
+  @@id([guild_id, moderator_id])
+  @@map("moderator_cooldowns")
+}
+
+model EmergencyMode {
+  guild_id     String   @id
+  enabled      Boolean  @default(false)
+  mode_type    String?  // "raid", "scam_attack", "bot_attack"
+  enabled_by   String
+  enabled_at   DateTime @default(now())
+  reason       String?
+
+  @@map("emergency_modes")
+}
+
+model SafetyAdmin {
+  guild_id   String
+  user_id    String
+  added_by   String
+  added_at   DateTime @default(now())
+
+  @@id([guild_id, user_id])
+  @@map("safety_admins")
+}
+
+model PendingMailMessage {
+  id         String   @id @default(uuid())
+  guild_id   String
+  user_id    String
+  content    String
+  attachments Json?
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, user_id])
+  @@index([guild_id, user_id])
+  @@map("pending_mail_messages")
+}
+
+// =====================================
+// GIVEAWAY SYSTEM MODELS
+// =====================================
+
+model Giveaway {
+  id                    Int      @id @default(autoincrement())
+  messageId             String   @unique
+  channelId             String
+  guildId               String
+  hostId                String
+  prize                 String
+  winnersCount          Int
+  endTime               BigInt   // Unix timestamp in milliseconds
+  ended                 Boolean  @default(false)
+  paused                Boolean  @default(false)
+  pausedAt              BigInt?
+  createdAt             BigInt
+
+  // Requirements
+  roleRequirement       String?
+  inviteRequirement     Int      @default(0)
+  accountAgeRequirement Int      @default(0)
+  serverAgeRequirement  Int      @default(0)
+  captchaRequirement    Boolean  @default(false)
+  messageRequired       Int      @default(0)
+  voiceRequirement      Int      @default(0)
+
+  // Features
+  customMessage         String?
+  assignRole            String?
+  winnerRole            String?
+  thumbnail             String?
+  emoji                 String   @default("🎉")
+  increaseChance        String?  // 'role', 'booster', 'role_booster'
+  increaseChanceRole    String?
+  forcedWinners         String?  // Comma-separated user IDs for forced winners
+  preCalculatedWinners  String?  // Pre-calculated winner IDs (comma-separated)
+  winnersCalculatedAt   BigInt?  // When winners were pre-calculated
+
+  participants          GiveawayParticipant[]
+  winners               GiveawayWinner[]
+  
+  @@index([guildId])
+  @@index([ended])
+  @@map("giveaways")
+}
+
+model GiveawayParticipant {
+  id         Int      @id @default(autoincrement())
+  giveawayId Int
+  userId     String
+  joinedAt   BigInt
+  giveaway   Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+
+  @@index([giveawayId])
+  @@index([userId])
+  @@map("giveaway_participants")
+}
+
+model GiveawayWinner {
+  id         Int      @id @default(autoincrement())
+  giveawayId Int
+  userId     String
+  wonAt      BigInt
+  giveaway   Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+
+  @@index([giveawayId])
+  @@map("giveaway_winners")
+}
+
+model ScheduledGiveaway {
+  id                    Int      @id @default(autoincrement())
+  channelId             String
+  guildId               String
+  hostId                String
+  prize                 String
+  winnersCount          Int
+  payload               String   // JSON string containing all options
+  startTime             BigInt   // Unix timestamp in milliseconds
+  createdAt             DateTime @default(now())
+
+  @@index([guildId])
+  @@index([startTime])
+  @@map("scheduled_giveaways")
+}
+
+model GiveawayConfig {
+  guildId     String @id
+  managerRole String?
+  prefix      String @default("!")
+
+  @@map("giveaway_config")
+}
+
+model GiveawayUserStats {
+  id           Int    @id @default(autoincrement())
+  guildId      String
+  userId       String
+  messageCount Int    @default(0)
+  voiceMinutes Int    @default(0)
+  inviteCount  Int    @default(0)
+
+  @@unique([guildId, userId])
+  @@index([guildId])
+  @@map("giveaway_user_stats")
+}
+
+model GiveawayInviteTracker {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  inviterId String
+  inviteeId String
+  code      String?
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, inviteeId])
+  @@index([guildId])
+  @@map("giveaway_invite_tracker")
+}
+
+// =====================================
+// END GIVEAWAY SYSTEM MODELS
+// =====================================
+
+model WVAllowedRole {
+  id         String   @id @default(uuid())
+  guild_id   String
+  role_id    String
+  added_by   String
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, role_id])
+  @@index([guild_id])
+  @@map("wv_allowed_roles")
+}
+
+model SuggestionConfig {
+  guild_id          String  @id
+  enabled           Boolean @default(false)
+  channel_id        String?
+  sticky_message_id String?
+
+  @@map("suggestion_config")
+}
+
+model Suggestion {
+  id                String    @id @default(uuid())
+  guild_id          String
+  channel_id        String
+  message_id        String    @unique
+  author_id         String
+  suggestion        String
+  suggestion_number Int
+  status            String    @default("pending") // pending, approved, denied, considered
+  admin_response    String?
+  reviewed_by       String?
+  reviewed_at       DateTime?
+  created_at        DateTime  @default(now())
+
+  @@index([guild_id])
+  @@index([status])
+  @@index([guild_id, suggestion_number])
+  @@map("suggestions")
+}
+
+model ModActionRateLimit {
+  id           String   @id @default(uuid())
+  guild_id     String
+  moderator_id String
+  action       String   // 'ban', 'kick'
+  timestamp    DateTime @default(now())
+
+  @@index([guild_id, moderator_id, timestamp])
+  @@map("mod_action_rate_limits")
+}
+
+model ModCooldownOverride {
+  id           String   @id @default(uuid())
+  guild_id     String
+  moderator_id String
+  granted_by   String
+  granted_at   DateTime @default(now())
+  expires_at   DateTime
+
+  @@unique([guild_id, moderator_id])
+  @@index([expires_at])
+  @@map("mod_cooldown_overrides")
+}
+
+model ModActionBlock {
+  id           String   @id @default(uuid())
+  guild_id     String
+  moderator_id String
+  blocked_at   DateTime @default(now())
+  reason       String
+
+  @@unique([guild_id, moderator_id])
+  @@map("mod_action_blocks")
+}
+
+model ModConfig {
+  guild_id       String  @id
+  log_channel_id String?
+  
+  @@map("mod_config")
+}
