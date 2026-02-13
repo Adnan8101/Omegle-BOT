@@ -152,6 +152,7 @@ model MailConfig {
   transcript_channel_id String?
   ask_confirmation      Boolean? @default(false)
   closed_category_id    String?
+  staff_message         String?
 
   @@map("mail_config")
 }

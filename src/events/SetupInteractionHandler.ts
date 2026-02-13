@@ -3,14 +3,14 @@ import { client } from '../core/discord';
 import { db } from '../data/db';
 
 // Transient state for setup wizards
-// Map<userId_guildId, { openCat?: string, closeCat?: string, transChan?: string }>
-const setupState = new Map<string, { openCat?: string, closeCat?: string, transChan?: string }>();
+// Map<userId_guildId, { openCat?: string, closeCat?: string, transChan?: string, staffRoles?: string[] }>
+const setupState = new Map<string, { openCat?: string, closeCat?: string, transChan?: string, staffRoles?: string[] }>();
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     if (!interaction.guildId) return;
 
     // Check if it's a setup interaction
-    if (!interaction.isChannelSelectMenu() && !interaction.isButton()) return;
+    if (!interaction.isChannelSelectMenu() && !interaction.isRoleSelectMenu() && !interaction.isButton()) return;
     if (!interaction.customId.startsWith('setup_')) return;
 
     const key = `${interaction.user.id}_${interaction.guildId}`;
@@ -36,11 +36,27 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         setupState.set(key, state);
     }
 
-    // 2. Handle Save Button
+    // 2. Handle Role Select
+    if (interaction.isRoleSelectMenu() && interaction.customId === 'setup_staff_roles') {
+        state.staffRoles = interaction.values;
+        const roleMentions = interaction.values.map(r => `<@&${r}>`).join(', ');
+        await interaction.reply({ content: `<:tickYes:1469272837192814623> Staff Roles selected: ${roleMentions}`, ephemeral: true });
+        setupState.set(key, state);
+    }
+
+    // 3. Handle Save Button
     if (interaction.isButton() && interaction.customId === 'setup_save') {
         if (!state.openCat || !state.transChan) {
             await interaction.reply({
                 content: '<:cross:1469273232929456314> **Missing Required Fields**\nPlease select at least an **Opening Category** and a **Transcript Channel**.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        if (!state.staffRoles || state.staffRoles.length === 0) {
+            await interaction.reply({
+                content: '<:cross:1469273232929456314> **Missing Required Fields**\nPlease select at least one **Staff Role**.',
                 ephemeral: true
             });
             return;
@@ -68,20 +84,23 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 }
             });
 
-            // Ensure at least one default category exists if none are present
+            // Upsert the default category with the selected staff roles
             const existingCat = await db.mailCategory.findFirst({ where: { guild_id: interaction.guildId } });
-            if (!existingCat) {
-                // Best effort to find a staff role
-                const guild = interaction.guild;
-                const staffRole = guild?.roles.cache.find(r => r.name.toLowerCase().includes('mod') || r.permissions.has('BanMembers'));
-                const roles = staffRole ? [staffRole.id] : [];
-
+            if (existingCat) {
+                await db.mailCategory.update({
+                    where: { id: existingCat.id },
+                    data: {
+                        channel_category_id: state.openCat,
+                        staff_role_ids: state.staffRoles
+                    }
+                });
+            } else {
                 await db.mailCategory.create({
                     data: {
                         guild_id: interaction.guildId,
                         name: 'Support',
-                        channel_category_id: state.openCat, // Use the selected opening category
-                        staff_role_ids: roles
+                        channel_category_id: state.openCat,
+                        staff_role_ids: state.staffRoles
                     }
                 });
             }
@@ -89,17 +108,21 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             // Cleanup state
             setupState.delete(key);
 
+            const roleMentions = state.staffRoles.map(r => `<@&${r}>`).join(', ');
             const embed = new EmbedBuilder()
+                .setColor(0x57F287)
                 .setTitle('<:tickYes:1469272837192814623> Setup Saved Successfully')
-                .setDescription(`**Configuration:**\n• **Opening Category**: <#${state.openCat}>\n• **Transcript Channel**: <#${state.transChan}>\n• **Closing Category**: ${state.closeCat ? `<#${state.closeCat}>` : 'None'}`)
-                .setFooter({ text: 'You can run /deletesetup to reset this.' });
+                .setDescription(
+                    `**Configuration:**\n` +
+                    `• **Opening Category:** <#${state.openCat}>\n` +
+                    `• **Transcript Channel:** <#${state.transChan}>\n` +
+                    `• **Closing Category:** ${state.closeCat ? `<#${state.closeCat}>` : 'None'}\n` +
+                    `• **Staff Roles:** ${roleMentions}\n\n` +
+                    `Use \`!setupmail message <text>\` to set a custom greeting for new tickets.`
+                )
+                .setFooter({ text: 'You can run !deletesetup to reset this.' });
 
             await interaction.editReply({ embeds: [embed] });
-
-            // Optional: Update origin message to show saved state
-            if (interaction.message.channel.isTextBased() && !interaction.message.channel.isDMBased()) {
-                await interaction.message.channel.send({ content: 'Setup configuration finalized.' });
-            }
 
         } catch (error: any) {
             console.error(error);

@@ -1,4 +1,4 @@
-import { Events, Interaction, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ChannelType, PermissionFlagsBits, TextChannel, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import { Events, Interaction, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ChannelType, PermissionFlagsBits, TextChannel, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ComponentType, Guild, GuildMember, User } from 'discord.js';
 import { client } from '../core/discord';
 import { mailService } from '../services/mail/MailService';
 import { db } from '../data/db';
@@ -7,6 +7,113 @@ import { modService } from '../services/moderation/ModerationService';
 import { activityLogService } from '../services/logging/ActivityLogService';
 
 const TICK = '<:tickYes:1469272837192814623>';
+
+// ─── Helper: Build the full ticket info embed (replicates all !whois data + last 5 modlogs) ───
+async function buildTicketEmbed(
+    guild: Guild,
+    userId: string,
+    displayId: number,
+    catName: string,
+    staffMessage: string | null | undefined
+) {
+    const member = await guild.members.fetch(userId).catch(() => null) as GuildMember | null;
+    const user = await client.users.fetch(userId).catch(() => null) as User | null;
+    const modLogs = await modService.getLogs(guild.id, userId).catch(() => []) as any[];
+    const voiceLogs = await activityLogService.getVoiceLogs(guild.id, userId, 5).catch(() => []) as any[];
+    const recentAction = await modService.getRecentAction(guild.id, userId);
+
+    const createdAt = user ? Math.floor(user.createdTimestamp / 1000) : 0;
+    const joinedAt = member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : 0;
+    const currentVC = member?.voice.channel ? `<#${member.voice.channel.id}>` : 'None';
+
+    // ── Roles (full list like !whois) ──
+    const allRoles = member
+        ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString())
+        : [];
+    const rolesCount = allRoles.length;
+    const rolesDisplay = rolesCount > 0
+        ? (rolesCount > 20 ? allRoles.slice(0, 20).join(', ') + ` (+${rolesCount - 20} more)` : allRoles.join(', '))
+        : 'None';
+
+    // ── Warn / Manual / Mute counts (matching !whois) ──
+    const warnCount = modLogs.filter((l: any) => l.action === 'warn').length;
+    const manualCount = modLogs.filter((l: any) => l.action === 'mute' && !l.active).length;
+    const activeMute = modLogs.find((l: any) => l.action === 'mute' && l.active);
+    const totalCases = modLogs.length;
+
+    // ── Timeout status ──
+    let timeoutText = 'No';
+    if (member?.isCommunicationDisabled()) {
+        const unmuteTs = Math.floor(member.communicationDisabledUntilTimestamp! / 1000);
+        timeoutText = `Yes (expires <t:${unmuteTs}:R>)`;
+    }
+
+    // ── Active mute status ──
+    let muteText = '';
+    if (activeMute) {
+        if (activeMute.duration_seconds) {
+            const unmuteAt = Math.floor((new Date(activeMute.created_at).getTime() / 1000) + activeMute.duration_seconds);
+            muteText = `\n**Active Mute:** Yes (unmutes <t:${unmuteAt}:R>)`;
+        } else {
+            muteText = `\n**Active Mute:** Yes (permanent)`;
+        }
+    }
+
+    // ── Build description ──
+    let description =
+        `**User:** <@${userId}> (\`${userId}\`)\n` +
+        `**Category:** ${catName}\n\n` +
+        `**Registered:** <t:${createdAt}:F> (<t:${createdAt}:R>)\n` +
+        `**Joined:** ${joinedAt ? `<t:${joinedAt}:F> (<t:${joinedAt}:R>)` : 'Not in server'}\n\n` +
+        `**Roles [${rolesCount}]:** ${rolesDisplay}\n` +
+        `**Current VC:** ${currentVC}\n\n` +
+        `**Timed Out:** ${timeoutText}${muteText}\n` +
+        `**Warns:** ${warnCount} • **Manual Mutes:** ${manualCount} • **Total Cases:** ${totalCases}`;
+
+    // ── Staff message at the top if configured ──
+    if (staffMessage) {
+        description = `> ${staffMessage}\n\n${description}`;
+    }
+
+    const embed = new EmbedBuilder()
+        .setColor(0x2B2D31)
+        .setAuthor({
+            name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
+            iconURL: user?.displayAvatarURL() || undefined
+        })
+        .setThumbnail(user?.displayAvatarURL() || null)
+        .setDescription(description)
+        .setFooter({ text: `Ticket ${displayId} • ${catName}` })
+        .setTimestamp();
+
+    // ── Last 5 Modlogs (inline field) ──
+    if (modLogs.length > 0) {
+        const logLines = modLogs.slice(0, 5).map((log: any) => {
+            const ts = Math.floor(new Date(log.created_at).getTime() / 1000);
+            return `\`#${log.case_number}\` **${log.action.toUpperCase()}** • <t:${ts}:R>\n↳ ${log.reason || 'No reason'}`;
+        }).join('\n');
+        embed.addFields({ name: `📋 Recent Modlogs (${Math.min(modLogs.length, 5)}/${modLogs.length})`, value: logLines, inline: false });
+    } else {
+        embed.addFields({ name: '📋 Modlogs', value: 'No modlogs', inline: false });
+    }
+
+    // ── Recent VC Activity ──
+    if (voiceLogs && voiceLogs.length > 0) {
+        const vcLines = voiceLogs.slice(0, 3).map((log: any) => {
+            const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
+            let dur = 'Active';
+            if (log.duration_seconds && log.duration_seconds > 0) {
+                const hrs = Math.floor(log.duration_seconds / 3600);
+                const mins = Math.floor((log.duration_seconds % 3600) / 60);
+                dur = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+            }
+            return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
+        }).join('\n');
+        embed.addFields({ name: '🔊 Recent VC Activity', value: vcLines, inline: false });
+    }
+
+    return { embed, recentAction };
+}
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
@@ -17,7 +124,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     if (customId.startsWith('mail_create_')) {
         const guildId = customId.split('_')[2];
 
-        // Check blacklist/active tickets again
         const active = await mailService.getActiveTicket(guildId, interaction.user.id);
         if (active) {
             await interaction.reply({ content: 'You already have an open ticket.', ephemeral: true });
@@ -30,21 +136,18 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             return;
         }
 
-        // AUTO-SELECT CATEGORY LOGIC
         const defaultCategory = categories[0];
         const categoryId = defaultCategory.id;
         const userId = interaction.user.id;
 
         await interaction.deferUpdate();
 
-        // Create Ticket in DB
         const ticket = await mailService.createPendingTicket(guildId, userId, categoryId);
         if (!ticket) {
             await interaction.followUp({ content: 'Failed to create ticket.', ephemeral: true });
             return;
         }
 
-        // Create Channel in Guild
         const guild = client.guilds.cache.get(guildId);
         if (!guild) return;
 
@@ -74,67 +177,13 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 ]
             });
 
-            // Update Ticket as OPEN
             await mailService.openTicket(ticket.ticket_id, channel.id);
 
-            // Fetch user info for detailed embed
-            const member = await guild.members.fetch(userId).catch(() => null);
-            const user = await client.users.fetch(userId).catch(() => null);
-            const recentAction = await modService.getRecentAction(guildId, userId);
-            const modLogs = await modService.getLogs(guildId, userId).catch(() => []);
-            const voiceLogs = await activityLogService.getVoiceLogs(guildId, userId, 5).catch(() => []);
+            // Fetch config for staff_message
+            const config = await mailService.getGuildConfig(guildId);
+            const { embed: controlEmbed, recentAction } = await buildTicketEmbed(guild, userId, displayId, catConfig.name, config?.staff_message);
 
-            const createdAt = user ? Math.floor(user.createdTimestamp / 1000) : 0;
-            const joinedAt = member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : 0;
-            const totalCases = modLogs?.length || 0;
-            const currentVC = member?.voice.channel ? `<#${member.voice.channel.id}>` : 'None';
-            const roles = member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).slice(0, 10).join(', ') || 'None' : 'N/A';
-
-            // Build detailed ticket embed
-            const controlEmbed = new EmbedBuilder()
-                .setColor(0x2B2D31)
-                .setAuthor({
-                    name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
-                    iconURL: user?.displayAvatarURL() || undefined
-                })
-                .setThumbnail(user?.displayAvatarURL() || null)
-                .setDescription(
-                    `**User:** <@${userId}> (\`${userId}\`)\n` +
-                    `**Category:** ${catConfig.name}\n` +
-                    `**Created:** <t:${createdAt}:R> • **Joined:** ${joinedAt ? `<t:${joinedAt}:R>` : 'N/A'}\n` +
-                    `**Roles:** ${roles}\n` +
-                    `**Current VC:** ${currentVC}\n` +
-                    `**Mod Cases:** ${totalCases}`
-                )
-                .setFooter({ text: `Ticket ${displayId} • ${catConfig.name}` })
-                .setTimestamp();
-
-            // Add Recent Mod Action field if exists
-            if (recentAction) {
-                const actionTimestamp = Math.floor(new Date(recentAction.created_at).getTime() / 1000);
-                controlEmbed.addFields({
-                    name: '⚠️ Recent Mod Action',
-                    value: `**${recentAction.action.toUpperCase()}** by <@${recentAction.moderator_id}> • <t:${actionTimestamp}:R>\n${recentAction.reason || 'No reason'}`,
-                    inline: false
-                });
-            }
-
-            // Add recent VC activity if exists
-            if (voiceLogs && voiceLogs.length > 0) {
-                const vcLines = voiceLogs.slice(0, 3).map(log => {
-                    const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
-                    let dur = 'Active';
-                    if (log.duration_seconds && log.duration_seconds > 0) {
-                        const hrs = Math.floor(log.duration_seconds / 3600);
-                        const mins = Math.floor((log.duration_seconds % 3600) / 60);
-                        dur = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-                    }
-                    return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
-                }).join('\n');
-                controlEmbed.addFields({ name: 'Recent VC Activity', value: vcLines, inline: false });
-            }
-
-            // All buttons are Secondary (colorless/grey)
+            // Buttons — Whois removed, only Claim/Close + ModLogs/VCLogs
             const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Secondary)
@@ -142,11 +191,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_modlogs_${userId}`).setLabel('Mod Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary)
+                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary)
             );
 
-            // Build content with moderator ping if recent action exists
             let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
             if (recentAction) {
                 channelContent += `\n⚠️ <@${recentAction.moderator_id}> — user had a recent **${recentAction.action}** action.`;
@@ -214,58 +261,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             await mailService.openTicket(ticket.ticket_id, channel.id);
 
-            const member = await guild.members.fetch(userId).catch(() => null);
-            const user = await client.users.fetch(userId).catch(() => null);
-            const recentAction = await modService.getRecentAction(guildId, userId);
-            const modLogs = await modService.getLogs(guildId, userId).catch(() => []);
-            const voiceLogs = await activityLogService.getVoiceLogs(guildId, userId, 5).catch(() => []);
-
-            const createdAt = user ? Math.floor(user.createdTimestamp / 1000) : 0;
-            const joinedAt = member?.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : 0;
-            const totalCases = modLogs?.length || 0;
-            const currentVC = member?.voice.channel ? `<#${member.voice.channel.id}>` : 'None';
-            const roles = member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).slice(0, 10).join(', ') || 'None' : 'N/A';
-
-            const controlEmbed = new EmbedBuilder()
-                .setColor(0x2B2D31)
-                .setAuthor({
-                    name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
-                    iconURL: user?.displayAvatarURL() || undefined
-                })
-                .setThumbnail(user?.displayAvatarURL() || null)
-                .setDescription(
-                    `**User:** <@${userId}> (\`${userId}\`)\n` +
-                    `**Category:** ${catConfig.name}\n` +
-                    `**Created:** <t:${createdAt}:R> • **Joined:** ${joinedAt ? `<t:${joinedAt}:R>` : 'N/A'}\n` +
-                    `**Roles:** ${roles}\n` +
-                    `**Current VC:** ${currentVC}\n` +
-                    `**Mod Cases:** ${totalCases}`
-                )
-                .setFooter({ text: `Ticket ${displayId} • ${catConfig.name}` })
-                .setTimestamp();
-
-            if (recentAction) {
-                const actionTimestamp = Math.floor(new Date(recentAction.created_at).getTime() / 1000);
-                controlEmbed.addFields({
-                    name: '⚠️ Recent Mod Action',
-                    value: `**${recentAction.action.toUpperCase()}** by <@${recentAction.moderator_id}> • <t:${actionTimestamp}:R>\n${recentAction.reason || 'No reason'}`,
-                    inline: false
-                });
-            }
-
-            if (voiceLogs && voiceLogs.length > 0) {
-                const vcLines = voiceLogs.slice(0, 3).map(log => {
-                    const joined = Math.floor(new Date(log.joined_at).getTime() / 1000);
-                    let dur = 'Active';
-                    if (log.duration_seconds && log.duration_seconds > 0) {
-                        const hrs = Math.floor(log.duration_seconds / 3600);
-                        const mins = Math.floor((log.duration_seconds % 3600) / 60);
-                        dur = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-                    }
-                    return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
-                }).join('\n');
-                controlEmbed.addFields({ name: 'Recent VC Activity', value: vcLines, inline: false });
-            }
+            const config = await mailService.getGuildConfig(guildId);
+            const { embed: controlEmbed, recentAction } = await buildTicketEmbed(guild, userId, displayId, catConfig.name, config?.staff_message);
 
             const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Secondary),
@@ -274,8 +271,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_modlogs_${userId}`).setLabel('Mod Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder().setCustomId(`mail_whois_${userId}`).setLabel('Whois').setStyle(ButtonStyle.Secondary)
+                new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary)
             );
 
             let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
@@ -332,11 +328,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
         const channel = interaction.channel as TextChannel;
 
-        // Generate Transcript
         const messages = await mailService.getTicketMessages(ticketId);
         const html = TranscriptGenerator.generateHTML(messages as any, ticket.ticket_id, channel.guild.name);
 
-        // Send to Transcript Channel
         const config = await mailService.getGuildConfig(ticket.guild_id);
         if (config?.transcript_channel_id) {
             const tChannel = client.channels.cache.get(config.transcript_channel_id) as TextChannel;
@@ -364,7 +358,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
         await interaction.editReply(`${TICK} Ticket closed. Transcript saved. Channel will be deleted in 5 seconds.`);
 
-        // Auto-delete channel after 5 seconds
         setTimeout(async () => {
             try {
                 await channel.delete();
@@ -374,9 +367,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }, 5000);
     }
 
-    // ================== INFO BUTTONS (reuse command logic) ==================
+    // ================== INFO BUTTONS ==================
 
-    // 5. Mod Logs — same data as !modlogs command
+    // 5. Mod Logs
     if (customId.startsWith('mail_modlogs_')) {
         const targetId = customId.split('_')[2];
         await interaction.deferReply({ ephemeral: true });
@@ -422,7 +415,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         }
     }
 
-    // 6. VC Logs — same data as !vclogs command
+    // 6. VC Logs
     if (customId.startsWith('mail_vclogs_')) {
         const targetId = customId.split('_')[2];
         await interaction.deferReply({ ephemeral: true });
@@ -465,35 +458,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
         } catch (e: any) {
             await interaction.editReply(`Failed to fetch VC logs: ${e.message}`);
-        }
-    }
-
-    // 7. Whois
-    if (customId.startsWith('mail_whois_')) {
-        const targetId = customId.split('_')[2];
-        await interaction.deferReply({ ephemeral: true });
-
-        try {
-            const user = await client.users.fetch(targetId);
-            const member = await interaction.guild?.members.fetch(targetId).catch(() => null);
-
-            const created = Math.floor(user.createdTimestamp / 1000);
-            const joined = member ? Math.floor(member.joinedTimestamp! / 1000) : null;
-
-            const embed = new EmbedBuilder()
-                .setColor(0x2B2D31)
-                .setThumbnail(user.displayAvatarURL())
-                .setAuthor({ name: `Whois | ${user.username}`, iconURL: user.displayAvatarURL() })
-                .setDescription(`**ID:** ${user.id} | <@${user.id}>`)
-                .addFields(
-                    { name: 'Created On', value: `<t:${created}:F> (<t:${created}:R>)`, inline: true },
-                    { name: 'Joined Server', value: joined ? `<t:${joined}:F> (<t:${joined}:R>)` : 'Not in server', inline: true },
-                    { name: 'Roles', value: member ? member.roles.cache.filter(r => r.name !== '@everyone').map(r => r.toString()).join(', ') || 'None' : 'N/A' }
-                );
-
-            await interaction.editReply({ embeds: [embed] });
-        } catch (e: any) {
-            await interaction.editReply(`Failed to fetch user info: ${e.message}`);
         }
     }
 });

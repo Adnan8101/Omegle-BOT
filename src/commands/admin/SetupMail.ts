@@ -1,6 +1,6 @@
 import { Context } from '../../core/context';
 import { db } from '../../data/db';
-import { EmbedBuilder, Colors, PermissionFlagsBits, ChannelType, ActionRowBuilder, ChannelSelectMenuBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import { EmbedBuilder, Colors, PermissionFlagsBits, ChannelType, ActionRowBuilder, ChannelSelectMenuBuilder, RoleSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import { Command } from '../../core/command';
 
 export const SetupMail: Command = {
@@ -13,9 +13,37 @@ export const SetupMail: Command = {
     execute: async (ctx: Context, args: string[]) => {
         if (!ctx.inner.guild) return;
 
+        // Check if a staff message is being set via args: !setupmail message <text>
+        if (args.length >= 2 && args[0].toLowerCase() === 'message') {
+            const staffMessage = args.slice(1).join(' ');
+            await db.mailConfig.upsert({
+                where: { guild_id: ctx.guildId },
+                update: { staff_message: staffMessage },
+                create: {
+                    guild_id: ctx.guildId,
+                    inbox_category_id: '',
+                    enabled: false,
+                    staff_message: staffMessage
+                }
+            });
+            await ctx.reply({ content: `<:tickYes:1469272837192814623> Staff message updated:\n> ${staffMessage}` });
+            return;
+        }
+
         const embed = new EmbedBuilder()
+            .setColor(0x2B2D31)
             .setTitle('📨 ModMail Setup Wizard')
-            .setDescription('Please configure the ModMail system using the menus below.\n\n**Required:**\n• **Opening Category**: Where new tickets are created.\n• **Transcript Channel**: Where transcripts are sent.\n\n**Optional:**\n• **Closing Category**: Category to move closed tickets to (if enabled).');
+            .setDescription(
+                'Configure the ModMail system using the menus below.\n\n' +
+                '**Required:**\n' +
+                '• **Opening Category** — Where new tickets are created\n' +
+                '• **Transcript Channel** — Where transcripts are sent\n' +
+                '• **Staff Roles** — Roles that can see & respond to tickets\n\n' +
+                '**Optional:**\n' +
+                '• **Closing Category** — Category to move closed tickets to\n\n' +
+                '**Staff Message:**\n' +
+                'Use `!setupmail message <your message>` to set a custom greeting shown in every new ticket.'
+            );
 
         // 1. Inbox Category Select
         const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>()
@@ -44,8 +72,18 @@ export const SetupMail: Command = {
                     .setChannelTypes(ChannelType.GuildText)
             );
 
-        // 4. Save Button
-        const row4 = new ActionRowBuilder<ButtonBuilder>()
+        // 4. Staff Role Select
+        const row4 = new ActionRowBuilder<RoleSelectMenuBuilder>()
+            .addComponents(
+                new RoleSelectMenuBuilder()
+                    .setCustomId('setup_staff_roles')
+                    .setPlaceholder('Select Staff Roles (Required)')
+                    .setMinValues(1)
+                    .setMaxValues(5)
+            );
+
+        // 5. Save Button
+        const row5 = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('setup_save')
@@ -56,7 +94,7 @@ export const SetupMail: Command = {
 
         await ctx.reply({
             embeds: [embed],
-            components: [row1, row2, row3, row4]
+            components: [row1, row2, row3, row4, row5]
         });
     }
 };
