@@ -97,7 +97,23 @@ export const Steal: Command = {
                 results.push(`${TICK} \`${emoji.name}\` → <${emoji.animated ? 'a' : ''}:${created.name}:${created.id}>`);
                 successCount++;
             } catch (err: any) {
-                results.push(`${CROSS} \`${emoji.name}\` → ${err.message?.includes('maximum') ? 'Server emoji limit reached' : 'Failed'}`);
+                let errorReason = 'Unknown error';
+                
+                if (err.message?.includes('maximum') || err.code === 30008) {
+                    errorReason = 'Server emoji limit reached (50 static, 50 animated)';
+                } else if (err.code === 50035) {
+                    errorReason = 'Invalid emoji file or name';
+                } else if (err.code === 50013) {
+                    errorReason = 'Missing MANAGE_GUILD_EXPRESSIONS permission';
+                } else if (err.code === 50001) {
+                    errorReason = 'Missing access to emoji';
+                } else if (err.message?.includes('File cannot be larger')) {
+                    errorReason = 'Emoji file too large (max 256KB)';
+                } else if (err.message) {
+                    errorReason = `${err.message} ${err.code ? `(Code: ${err.code})` : ''}`.trim();
+                }
+                
+                results.push(`${CROSS} \`${emoji.name}\` → ${errorReason}`);
                 failCount++;
             }
         }
@@ -106,19 +122,46 @@ export const Steal: Command = {
         for (const sticker of stickersToSteal) {
             try {
                 const response = await fetch(sticker.url);
-                if (!response.ok) throw new Error('Failed to download sticker');
+                if (!response.ok) throw new Error(`Failed to download sticker (HTTP ${response.status})`);
 
                 const buffer = Buffer.from(await response.arrayBuffer());
+
+                // Validate sticker requirements
+                const fileSizeKB = (buffer.length / 1024).toFixed(2);
+                if (buffer.length > 512000) { // 500KB limit
+                    throw new Error(`File too large (${fileSizeKB}KB, max 500KB)`);
+                }
 
                 await guild.stickers.create({
                     file: buffer,
                     name: sticker.name,
                     tags: '🔥'
                 });
-                results.push(`${TICK} Sticker \`${sticker.name}\` added`);
+                results.push(`${TICK} Sticker \`${sticker.name}\` added (${fileSizeKB}KB)`);
                 successCount++;
             } catch (err: any) {
-                results.push(`${CROSS} Sticker \`${sticker.name}\` → ${err.message?.includes('maximum') ? 'Server sticker limit reached' : 'Failed'}`);
+                // Detailed error reasons
+                let errorReason = 'Unknown error';
+                
+                if (err.message?.includes('maximum') || err.code === 30039) {
+                    errorReason = 'Server sticker limit reached (max 5 for non-boosted)';
+                } else if (err.message?.includes('File too large')) {
+                    errorReason = err.message;
+                } else if (err.code === 50035) {
+                    errorReason = 'Invalid sticker file format';
+                } else if (err.code === 50013) {
+                    errorReason = 'Missing MANAGE_GUILD_EXPRESSIONS permission';
+                } else if (err.code === 50001) {
+                    errorReason = 'Missing access to sticker';
+                } else if (err.message?.includes('download')) {
+                    errorReason = err.message;
+                } else if (err.message?.includes('ENOTFOUND') || err.message?.includes('ECONNREFUSED')) {
+                    errorReason = 'Network error: Could not reach sticker URL';
+                } else if (err.message) {
+                    errorReason = `${err.message} ${err.code ? `(Code: ${err.code})` : ''}`.trim();
+                }
+                
+                results.push(`${CROSS} Sticker \`${sticker.name}\` → ${errorReason}`);
                 failCount++;
             }
         }
@@ -127,9 +170,23 @@ export const Steal: Command = {
         const embed = new EmbedBuilder()
             .setTitle('Steal Results')
             .setDescription(results.join('\n'))
-            
             .setFooter({ text: `${successCount} added • ${failCount} failed` })
             .setTimestamp();
+
+        // Add troubleshooting guide if there were failures
+        if (failCount > 0) {
+            embed.addFields({
+                name: '🔧 Common Issues & Solutions',
+                value: [
+                    '**Permission Error:** Bot needs `MANAGE_GUILD_EXPRESSIONS` permission',
+                    '**Limit Reached:** Server can have max 5 stickers (or more with boosts)',
+                    '**File Size:** Stickers must be under 500KB, Emojis under 256KB',
+                    '**Format:** Stickers must be PNG/APNG/Lottie, Emojis must be PNG/GIF',
+                    '**Network:** Make sure Discord CDN is accessible',
+                    '**Boost Level:** Higher server boost = more sticker/emoji slots'
+                ].join('\n')
+            });
+        }
 
         await ctx.reply({ embeds: [embed] });
     }
