@@ -659,7 +659,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     }
 
     // ═══════════════════════════════════════════
-    // 3. HANDLE "EDIT MANUAL" MODAL SUBMISSION
+    // 3. HANDLE "EDIT MANUAL" MODAL SUBMISSION - SHOW PREVIEW
     // ═══════════════════════════════════════════
     if (interaction.isModalSubmit() && interaction.customId.startsWith('manual_edit_modal_')) {
         const manualId = interaction.customId.replace('manual_edit_modal_', '');
@@ -672,36 +672,289 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             const advise = interaction.fields.getTextInputValue('manual_advise') || null;
             const noteProof = interaction.fields.getTextInputValue('manual_note') || null;
 
-            const updated = await manualService.updateManual(manualId, {
+            // Get the manual to get target info
+            const manual = await manualService.getManualById(manualId);
+            if (!manual) {
+                await interaction.editReply({ content: `${CROSS} Manual not found.` });
+                return;
+            }
+
+            const targetUser = await client.users.fetch(manual.target_id).catch(() => null);
+
+            // Check if there's existing preview data to restore
+            let existingPreview: ManualPreviewData | undefined;
+            for (const [key, value] of manualPreviewStore.entries()) {
+                if (key.includes(`edit_${manualId}`)) {
+                    existingPreview = value;
+                    manualPreviewStore.delete(key);
+                    break;
+                }
+            }
+
+            // Generate unique preview ID for edit
+            const previewId = `edit_${manualId}_${Date.now()}`;
+
+            // Store preview data for edit
+            manualPreviewStore.set(previewId, {
+                targetId: manual.target_id,
                 offense,
                 action,
                 advise,
-                note_proof: noteProof
+                noteProof,
+                moderatorId: interaction.user.id,
+                selectedReviewers: existingPreview?.selectedReviewers || [],
+                selectedMembers: existingPreview?.selectedMembers || []
             });
+
+            // Auto-cleanup after 10 minutes
+            setTimeout(() => manualPreviewStore.delete(previewId), 600000);
+
+            // Show preview with dropdowns
+            const previewEmbed = new EmbedBuilder()
+                .setColor(EMBED_COLOR)
+                .setTitle('Edit Manual Preview')
+                .setDescription(
+                    `**Manual #${manual.manual_number}**\n` +
+                    `**Target:** ${targetUser ? `${targetUser.username}` : `<@${manual.target_id}>`}\n\n` +
+                    `**Offense:** ${offense}\n` +
+                    `**Action:** ${action}\n` +
+                    `**Advise:** ${advise || 'N/A'}\n` +
+                    `**Note/Proof:** ${noteProof || 'N/A'}`
+                );
+
+            // Show current selections if any
+            let selectionsText = '';
+            if (existingPreview?.selectedReviewers && existingPreview.selectedReviewers.length > 0) {
+                selectionsText += `\n**Reviewers:** ${existingPreview.selectedReviewers.map(id => `<@${id}>`).join(', ')}`;
+            }
+            if (existingPreview?.selectedMembers && existingPreview.selectedMembers.length > 0) {
+                selectionsText += `\n**Copy to:** ${existingPreview.selectedMembers.map(id => `<@${id}>`).join(', ')}`;
+            }
+
+            if (selectionsText) {
+                previewEmbed.addFields({ name: 'Current Selections', value: selectionsText });
+            }
+            
+            const modMenu = new UserSelectMenuBuilder()
+                .setCustomId(`manual_editpreview_addmod_${previewId}`)
+                .setPlaceholder('Add Moderators (Reviewers)')
+                .setMinValues(0)
+                .setMaxValues(10);
+
+            const memberMenu = new UserSelectMenuBuilder()
+                .setCustomId(`manual_editpreview_addmember_${previewId}`)
+                .setPlaceholder('Add Members (Copy Manual To)')
+                .setMinValues(0)
+                .setMaxValues(10);
+
+            const buttonRow = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`manual_editpreview_back_${manualId}_${previewId}`)
+                        .setLabel('Back')
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId(`manual_editpreview_send_${manualId}_${previewId}`)
+                        .setLabel('Save')
+                        .setStyle(ButtonStyle.Primary)
+                );
+
+            const modRow = new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(modMenu);
+            const memberRow = new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(memberMenu);
+
+            await interaction.editReply({ 
+                embeds: [previewEmbed], 
+                components: [modRow, memberRow, buttonRow] 
+            });
+        } catch (err: any) {
+            console.error('Error showing edit manual preview:', err);
+            await interaction.editReply({ content: `${CROSS} Failed to show preview: ${err.message}` });
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // 3a. HANDLE MODERATOR SELECTION IN EDIT PREVIEW
+    // ═══════════════════════════════════════════
+    if (interaction.isUserSelectMenu() && interaction.customId.startsWith('manual_editpreview_addmod_')) {
+        const previewId = interaction.customId.replace('manual_editpreview_addmod_', '');
+        const previewData = manualPreviewStore.get(previewId);
+
+        if (!previewData) {
+            await interaction.reply({ content: `${CROSS} Preview data expired. Please start again.`, ephemeral: true });
+            return;
+        }
+
+        previewData.selectedReviewers = interaction.values;
+        manualPreviewStore.set(previewId, previewData);
+
+        await interaction.reply({ 
+            content: `${TICK} Selected ${interaction.values.length} moderator(s) as reviewers: ${interaction.values.map(id => `<@${id}>`).join(', ')}`, 
+            ephemeral: true 
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    // 3b. HANDLE MEMBER SELECTION IN EDIT PREVIEW
+    // ═══════════════════════════════════════════
+    if (interaction.isUserSelectMenu() && interaction.customId.startsWith('manual_editpreview_addmember_')) {
+        const previewId = interaction.customId.replace('manual_editpreview_addmember_', '');
+        const previewData = manualPreviewStore.get(previewId);
+
+        if (!previewData) {
+            await interaction.reply({ content: `${CROSS} Preview data expired. Please start again.`, ephemeral: true });
+            return;
+        }
+
+        previewData.selectedMembers = interaction.values;
+        manualPreviewStore.set(previewId, previewData);
+
+        await interaction.reply({ 
+            content: `${TICK} Selected ${interaction.values.length} member(s) to copy manual to: ${interaction.values.map(id => `<@${id}>`).join(', ')}`, 
+            ephemeral: true 
+        });
+    }
+
+    // ═══════════════════════════════════════════
+    // 3c. HANDLE "BACK" BUTTON FROM EDIT PREVIEW
+    // ═══════════════════════════════════════════
+    if (interaction.isButton() && interaction.customId.startsWith('manual_editpreview_back_')) {
+        const parts = interaction.customId.split('_');
+        const manualId = parts[3];
+        const previewId = parts[4] + '_' + parts[5];
+        const previewData = manualPreviewStore.get(previewId);
+
+        if (!previewData) {
+            await interaction.reply({ content: `${CROSS} Preview data expired. Please start again.`, ephemeral: true });
+            return;
+        }
+
+        // Re-show the modal with pre-filled data
+        const modal = new ModalBuilder()
+            .setCustomId(`manual_edit_modal_${manualId}`)
+            .setTitle('Edit Manual');
+
+        const offenseInput = new TextInputBuilder()
+            .setCustomId('manual_offense')
+            .setLabel('Offense')
+            .setStyle(TextInputStyle.Short)
+            .setValue(previewData.offense)
+            .setRequired(true)
+            .setMaxLength(500);
+
+        const actionInput = new TextInputBuilder()
+            .setCustomId('manual_action')
+            .setLabel('Action')
+            .setStyle(TextInputStyle.Short)
+            .setValue(previewData.action)
+            .setRequired(true)
+            .setMaxLength(500);
+
+        const adviseInput = new TextInputBuilder()
+            .setCustomId('manual_advise')
+            .setLabel('Advise')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(previewData.advise || '')
+            .setRequired(false)
+            .setMaxLength(1000);
+
+        const noteInput = new TextInputBuilder()
+            .setCustomId('manual_note')
+            .setLabel('Note / Proof')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(previewData.noteProof || '')
+            .setRequired(false)
+            .setMaxLength(1000);
+
+        modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(offenseInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(actionInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(adviseInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(noteInput)
+        );
+
+        // Keep preview data for when modal is resubmitted
+
+        await interaction.showModal(modal);
+    }
+
+    // ═══════════════════════════════════════════
+    // 3d. HANDLE "SAVE" BUTTON FROM EDIT PREVIEW
+    // ═══════════════════════════════════════════
+    if (interaction.isButton() && interaction.customId.startsWith('manual_editpreview_send_')) {
+        const parts = interaction.customId.split('_');
+        const manualId = parts[3];
+        const previewId = parts[4] + '_' + parts[5];
+        const previewData = manualPreviewStore.get(previewId);
+
+        if (!previewData) {
+            await interaction.reply({ content: `${CROSS} Preview data expired. Please start again.`, ephemeral: true });
+            return;
+        }
+
+        await interaction.deferUpdate();
+
+        try {
+            // Update the manual
+            const updated = await manualService.updateManual(manualId, {
+                offense: previewData.offense,
+                action: previewData.action,
+                advise: previewData.advise,
+                note_proof: previewData.noteProof
+            });
+
+            // Add reviewers if any were selected
+            for (const reviewerId of previewData.selectedReviewers) {
+                await manualService.addReviewer(updated.id, reviewerId);
+            }
+
+            // Get updated manual with reviewers
+            const updatedWithReviewers = await manualService.getManualById(updated.id);
 
             // Edit the original webhook message
             if (updated.log_message_id) {
-                await updateManualLog(interaction.guildId!, updated.log_message_id, updated.target_id, updated);
+                await updateManualLog(interaction.guildId!, updated.log_message_id, updated.target_id, updatedWithReviewers || updated);
+            }
+
+            // Copy manual to selected members
+            for (const memberId of previewData.selectedMembers) {
+                const copiedManual = await manualService.copyManualToUser(updated.id, memberId);
+                if (copiedManual) {
+                    const copiedLogMsgId = await sendManualLog(interaction.guildId!, memberId, copiedManual);
+                    if (copiedLogMsgId) {
+                        await manualService.setLogMessageId(copiedManual.id, copiedLogMsgId);
+                    }
+                }
             }
 
             const targetUser = await client.users.fetch(updated.target_id).catch(() => null);
 
-            const embed = new EmbedBuilder()
+            let additionalInfo = '';
+            if (previewData.selectedReviewers.length > 0) {
+                additionalInfo += `\n**Reviewers:** ${previewData.selectedReviewers.map(id => `<@${id}>`).join(', ')}`;
+            }
+            if (previewData.selectedMembers.length > 0) {
+                additionalInfo += `\n**Also added to:** ${previewData.selectedMembers.map(id => `<@${id}>`).join(', ')}`;
+            }
+
+            const successEmbed = new EmbedBuilder()
                 .setColor(EMBED_COLOR)
                 .setDescription(
                     `${TICK} **Manual Updated Successfully**\n\n` +
                     `**Manual #${updated.manual_number}** for ${targetUser ? `**${targetUser.username}**` : `<@${updated.target_id}>`}\n\n` +
-                    `**Offense:** ${offense}\n` +
-                    `**Action:** ${action}\n` +
-                    `**Advise:** ${advise || 'N/A'}\n` +
-                    `**Note / Proof:** ${noteProof || 'N/A'}`
+                    `**Offense:** ${previewData.offense}\n` +
+                    `**Action:** ${previewData.action}\n` +
+                    `**Advise:** ${previewData.advise || 'N/A'}\n` +
+                    `**Note / Proof:** ${previewData.noteProof || 'N/A'}${additionalInfo}`
                 )
                 .setFooter({ text: `Manual ID: ${updated.manual_number}` });
 
-            await interaction.editReply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [successEmbed], components: [] });
+
+            // Clean up preview data
+            manualPreviewStore.delete(previewId);
         } catch (err: any) {
-            console.error('Error editing manual:', err);
-            await interaction.editReply({ content: `${CROSS} Failed to edit manual: ${err.message}` });
+            console.error('Error updating manual:', err);
+            await interaction.followUp({ content: `${CROSS} Failed to update manual: ${err.message}`, ephemeral: true });
         }
     }
 
