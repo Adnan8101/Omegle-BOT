@@ -74,11 +74,17 @@ export const VoiceStats: Command = {
                 ? ((stats.total_time_deafened / stats.total_time_in_vc) * 100).toFixed(1)
                 : '0.0';
 
+            const avatarURL = 'displayAvatarURL' in targetUser ? targetUser.displayAvatarURL() : null;
+            
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-                .setTitle(`🎙️ Voice Statistics for ${targetUser.username}`)
-                .setThumbnail(targetUser.displayAvatarURL())
-                .addFields(
+                .setTitle(`Voice Statistics for ${targetUser.username}`);
+            
+            if (avatarURL) {
+                embed.setThumbnail(avatarURL);
+            }
+            
+            embed.addFields(
                     {
                         name: 'Overall Stats',
                         value: 
