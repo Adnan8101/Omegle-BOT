@@ -1,5 +1,5 @@
 import { Context } from '../../core/context';
-import { EmbedBuilder, PermissionFlagsBits, ChannelType, TextChannel, User } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits, ChannelType, TextChannel, VoiceChannel, User } from 'discord.js';
 import { Command } from '../../core/command';
 import { canPerformAction } from '../../util/rolePermissions';
 import { ModLogger } from '../../services/logging/ModLogger';
@@ -13,7 +13,7 @@ export const Unlock: Command = {
     description: 'Unlock a channel',
     category: 'Moderation',
     syntax: 'unlock [channel]',
-    example: 'unlock #general',
+    example: 'unlock\nunlock #general\nunlock 123456789',
     permissions: [PermissionFlagsBits.ManageChannels],
     modAction: 'unlock',
     execute: async (ctx: Context, args: string[]) => {
@@ -24,23 +24,42 @@ export const Unlock: Command = {
         if (!guild || !member) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`${CROSS} Server only`);
+                .setDescription(`${CROSS} Server only`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
 
-
-
         let targetChannel: TextChannel | undefined;
 
         if (args.length > 0) {
-            const channelInput = args[0];
+            const channelInput = args.join(' ');
+            
+            // Try channel mention
             const channelMatch = channelInput.match(/^<#(\d+)>$/);
             const channelId = channelMatch ? channelMatch[1] : channelInput;
 
-            const channel = guild.channels.cache.get(channelId);
+            // Try by ID first
+            let channel = guild.channels.cache.get(channelId);
+            
+            // If not found, try by name
+            if (!channel) {
+                channel = guild.channels.cache.find(ch => 
+                    ch.name.toLowerCase() === channelInput.toLowerCase().replace('#', '')
+                );
+            }
+
             if (channel?.type === ChannelType.GuildText) {
                 targetChannel = channel as TextChannel;
+            } else if (channel?.type === ChannelType.GuildVoice) {
+                // For voice channels, find the associated text channel
+                const voiceChannel = channel as VoiceChannel;
+                const textChannels = guild.channels.cache.filter(ch => 
+                    ch.type === ChannelType.GuildText && 
+                    ch.parentId === voiceChannel.id
+                );
+                if (textChannels.size > 0) {
+                    targetChannel = textChannels.first() as TextChannel;
+                }
             }
         } else {
             const channel = guild.channels.cache.get(ctx.channelId);
@@ -52,7 +71,7 @@ export const Unlock: Command = {
         if (!targetChannel) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`${CROSS} Channel not found`);
+                .setDescription(`${CROSS} Channel not found`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -64,7 +83,7 @@ export const Unlock: Command = {
 
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`🔓 ${TICK} **Unlocked** ${targetChannel}`);
+                .setDescription(`${TICK} **Unlocked** ${targetChannel}`);
             await ctx.reply({ embeds: [embed] });
 
             // Log action
@@ -72,7 +91,7 @@ export const Unlock: Command = {
         } catch (error: any) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`${CROSS} ${error.message}`);
+                .setDescription(`${CROSS} ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }
