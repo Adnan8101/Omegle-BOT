@@ -42,7 +42,7 @@ export const Unhide: Command = {
             let channel = guild.channels.cache.get(channelId);
             if (!channel && /^\d+$/.test(channelId)) {
                 try {
-                    channel = await guild.channels.fetch(channelId);
+                    channel = (await guild.channels.fetch(channelId)) ?? undefined;
                 } catch (e) {
                     // Channel not found
                 }
@@ -78,7 +78,7 @@ export const Unhide: Command = {
             let channel = guild.channels.cache.get(ctx.channelId);
             if (!channel) {
                 try {
-                    channel = await guild.channels.fetch(ctx.channelId);
+                    channel = (await guild.channels.fetch(ctx.channelId)) ?? undefined;
                 } catch (e) {
                     // Channel not found
                 }
