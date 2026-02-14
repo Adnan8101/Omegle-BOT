@@ -41,23 +41,35 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
     // Determine action
     const member = newState.member || oldState.member;
-    if (!member || member.user.bot) return;
+    if (!member) {
+        console.log('[VoiceLogger] ⚠️ No member found in voice state update');
+        return;
+    }
+    if (member.user.bot) {
+        console.log(`[VoiceLogger] 🤖 Ignoring bot: ${member.user.username}`);
+        return;
+    }
 
     const guildId = member.guild.id;
     const userId = member.id;
+    console.log(`[VoiceLogger] 👤 Event for ${member.user.username} (${userId}) in guild ${guildId}`);
+    console.log(`[VoiceLogger] 📍 Old channel: ${oldState.channelId || 'none'}, New channel: ${newState.channelId || 'none'}`);
 
     // Join
     if (!oldState.channelId && newState.channelId) {
+        console.log(`[VoiceLogger] ➡️ User JOINED voice channel ${newState.channelId}`);
         await activityLogService.logVoiceJoin(guildId, userId, newState.channelId);
         await voiceTrackingService.handleJoin(guildId, userId, newState.channelId, newState);
     }
     // Leave
     else if (oldState.channelId && !newState.channelId) {
+        console.log(`[VoiceLogger] ⬅️ User LEFT voice channel ${oldState.channelId}`);
         await activityLogService.logVoiceLeave(guildId, userId, oldState.channelId);
         await voiceTrackingService.handleLeave(guildId, userId);
     }
     // Switch
     else if (oldState.channelId && newState.channelId && oldState.channelId !== newState.channelId) {
+        console.log(`[VoiceLogger] 🔄 User SWITCHED from ${oldState.channelId} to ${newState.channelId}`);
         // Treat as Leave Old -> Join New
         await activityLogService.logVoiceLeave(guildId, userId, oldState.channelId);
         await activityLogService.logVoiceJoin(guildId, userId, newState.channelId);
@@ -70,7 +82,10 @@ client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceS
         const deafenChanged = (oldState.deaf !== newState.deaf) || (oldState.selfDeaf !== newState.selfDeaf);
         
         if (muteChanged || deafenChanged) {
+            console.log(`[VoiceLogger] 🎙️ User STATE CHANGED - mute: ${muteChanged}, deafen: ${deafenChanged}`);
             await voiceTrackingService.handleStateChange(guildId, userId, oldState, newState);
+        } else {
+            console.log(`[VoiceLogger] ℹ️ State update but no mute/deafen change`);
         }
     }
 });

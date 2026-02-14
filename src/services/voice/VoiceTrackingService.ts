@@ -6,7 +6,9 @@ class VoiceTrackingService {
      * Handle when a user joins a voice channel
      */
     async handleJoin(guildId: string, userId: string, channelId: string, state: VoiceState): Promise<void> {
+        console.log(`[VoiceTracking] 🔵 handleJoin called - Guild: ${guildId}, User: ${userId}, Channel: ${channelId}`);
         try {
+            console.log(`[VoiceTracking] 💾 Creating tracking session...`);
             await db.voiceTracking.create({
                 data: {
                     guild_id: guildId,
@@ -17,8 +19,10 @@ class VoiceTrackingService {
                     last_state_change: new Date()
                 }
             });
+            console.log(`[VoiceTracking] ✅ Tracking session created`);
 
             // Update user stats
+            console.log(`[VoiceTracking] 📊 Upserting user stats...`);
             await db.voiceUserStats.upsert({
                 where: {
                     guild_id_user_id: {
@@ -37,8 +41,9 @@ class VoiceTrackingService {
                     last_joined_at: new Date()
                 }
             });
+            console.log(`[VoiceTracking] ✅ User stats updated successfully`);
         } catch (error) {
-            console.error('Error handling voice join:', error);
+            console.error('[VoiceTracking] ❌ Error handling voice join:', error);
         }
     }
 
@@ -46,8 +51,10 @@ class VoiceTrackingService {
      * Handle when a user leaves a voice channel
      */
     async handleLeave(guildId: string, userId: string): Promise<void> {
+        console.log(`[VoiceTracking] 🔴 handleLeave called - Guild: ${guildId}, User: ${userId}`);
         try {
             // Find active session
+            console.log(`[VoiceTracking] 🔍 Finding active session...`);
             const activeSession = await db.voiceTracking.findFirst({
                 where: {
                     guild_id: guildId,
@@ -87,8 +94,10 @@ class VoiceTrackingService {
 
             // Calculate total session time
             const totalTime = Math.floor((now.getTime() - activeSession.joined_at.getTime()) / 1000);
+            console.log(`[VoiceTracking] ⏱️ Total session time: ${totalTime}s`);
 
             // Update cumulative stats
+            console.log(`[VoiceTracking] 📊 Updating cumulative stats...`);
             await db.voiceUserStats.update({
                 where: {
                     guild_id_user_id: {
@@ -104,8 +113,9 @@ class VoiceTrackingService {
                     total_time_listening: { increment: updateData.time_listening || activeSession.time_listening }
                 }
             });
+            console.log(`[VoiceTracking] ✅ Successfully updated stats on leave`);
         } catch (error) {
-            console.error('Error handling voice leave:', error);
+            console.error('[VoiceTracking] ❌ Error handling voice leave:', error);
         }
     }
 
@@ -113,6 +123,7 @@ class VoiceTrackingService {
      * Handle voice state changes (mute/unmute/deafen/undeafen)
      */
     async handleStateChange(guildId: string, userId: string, oldState: VoiceState, newState: VoiceState): Promise<void> {
+        console.log(`[VoiceTracking] 🟡 handleStateChange called - Guild: ${guildId}, User: ${userId}`);
         try {
             // Find active session
             const activeSession = await db.voiceTracking.findFirst({
@@ -135,6 +146,7 @@ class VoiceTrackingService {
             const wasDeafened = oldState.deaf || oldState.selfDeaf || false;
             const isMuted = newState.mute || newState.selfMute || false;
             const isDeafened = newState.deaf || newState.selfDeaf || false;
+            console.log(`[VoiceTracking] 🎤 State: wasMuted=${wasMuted}, wasDeaf=${wasDeafened} -> isMuted=${isMuted}, isDeaf=${isDeafened}, timeDelta=${timeDelta}s`);
 
             // Calculate time for previous state
             let updateData: any = {
@@ -157,8 +169,9 @@ class VoiceTrackingService {
                 where: { id: activeSession.id },
                 data: updateData
             });
+            console.log(`[VoiceTracking] ✅ State change tracked successfully`);
         } catch (error) {
-            console.error('Error handling voice state change:', error);
+            console.error('[VoiceTracking] ❌ Error handling voice state change:', error);
         }
     }
 
@@ -166,7 +179,8 @@ class VoiceTrackingService {
      * Get voice statistics for a user
      */
     async getUserStats(guildId: string, userId: string): Promise<any> {
-        return await db.voiceUserStats.findUnique({
+        console.log(`[VoiceTracking] 📊 Getting stats for Guild: ${guildId}, User: ${userId}`);
+        const stats = await db.voiceUserStats.findUnique({
             where: {
                 guild_id_user_id: {
                     guild_id: guildId,
@@ -174,6 +188,11 @@ class VoiceTrackingService {
                 }
             }
         });
+        console.log(`[VoiceTracking] ${stats ? '✅ Stats found' : '⚠️ No stats found'} for user ${userId}`);
+        if (stats) {
+            console.log(`[VoiceTracking] Stats: ${stats.total_sessions} sessions, ${stats.total_time_in_vc}s total time`);
+        }
+        return stats;
     }
 
     /**
