@@ -2,6 +2,7 @@ import { Context } from '../../core/context';
 import { Resolver } from '../../util/Resolver';
 import { modService } from '../../services/moderation/ModerationService';
 import { banAbuseService } from '../../services/moderation/BanAbuseService';
+import { antiAbuseService } from '../../services/moderation/AntiAbuseService';
 import { EmbedBuilder, User, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
 import { ModLogger } from '../../services/logging/ModLogger';
@@ -26,7 +27,7 @@ export const Ban: Command = {
         if (cooldownUntil) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(
+                .setDescription(
                     `${CROSS} **Ban Cooldown Active**\n\n` +
                     `You are on a 10-minute ban cooldown.\n` +
                     `Ends: <t:${Math.floor(cooldownUntil.getTime() / 1000)}:R>`
@@ -52,7 +53,22 @@ export const Ban: Command = {
         if (!guild) return;
 
         try {
-            // Track ban for abuse detection with reason
+            // Track ban for anti-abuse detection (rate limiting)
+            const abuseTrackResult = await antiAbuseService.trackAction(ctx.guildId, ctx.authorId, 'ban');
+
+            if (abuseTrackResult.blocked) {
+                const embed = new EmbedBuilder()
+                    .setColor(0x2b2d31)
+                    .setDescription(
+                        `${CROSS} **Action Blocked**\n\n` +
+                        `You have been blocked from performing moderation actions due to exceeding rate limits.\n\n` +
+                        `Contact a Senior Moderator or Administrator to review your case.`
+                    );
+                await ctx.reply({ embeds: [embed], ephemeral: true });
+                return;
+            }
+
+            // Track ban for abuse detection with reason (ban-specific tracking)
             const trackResult = await banAbuseService.trackBan(ctx.guildId, ctx.authorId, targetUser.id, reason);
 
             if (trackResult.blocked) {
@@ -76,13 +92,23 @@ export const Ban: Command = {
 
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(
+                .setDescription(
                     `${TICK} **Banned** ${targetUser.username}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`
                 );
 
             await ctx.reply({ embeds: [embed] });
+
+            // Show warning if any
+            if (abuseTrackResult.warning) {
+                try {
+                    const moderator = await guild.members.fetch(ctx.authorId);
+                    await moderator.send(abuseTrackResult.warning);
+                } catch (dmError) {
+                    console.log(`Could not DM moderator ${ctx.authorId} about rate limit warning`);
+                }
+            }
 
             // Log action
             await ModLogger.log(guild, ctx.inner.member.user as User, targetUser, 'Ban', reason);
