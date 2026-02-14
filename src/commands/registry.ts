@@ -3,6 +3,7 @@ import { Ban } from './moderation/Ban';
 import { Kick } from './moderation/Kick';
 import { Warn } from './moderation/Warn';
 import { Mute } from './moderation/Mute';
+import { Muted } from './moderation/Muted';
 import { Unmute } from './moderation/Unmute';
 import { Unban } from './moderation/Unban';
 import { Reason } from './moderation/Reason';
@@ -66,6 +67,7 @@ import { DeleteManual } from './moderation/DeleteManual';
 import { ManualLogsChannel } from './admin/ManualLogsChannel';
 import { CustomVCRole } from './admin/CustomVCRole';
 import { VoiceStats } from './admin/VoiceStats';
+import { VoiceStatsChannel } from './admin/VoiceStatsChannel';
 import { VoiceLeaderboard } from './admin/VoiceLeaderboard';
 
 // Sticky subcommands
@@ -83,6 +85,7 @@ export const CommandRegistry: Record<string, Command> = {
     'kick': Kick,
     'warn': Warn,
     'mute': Mute,
+    'muted': Muted,
     'unmute': Unmute,
     'unban': Unban,
     'reason': Reason,
@@ -167,8 +170,10 @@ export const CommandRegistry: Record<string, Command> = {
 
     // Voice Tracking System
     'voicestats': VoiceStats,
+    'voicestatschannel': VoiceStatsChannel,
     'voiceleaderboard': VoiceLeaderboard,
     'vcstats': VoiceStats,
+    'vcstatschannel': VoiceStatsChannel,
     'vclb': VoiceLeaderboard,
 
     // Sticky Commands (Main + Subcommands for Help display)

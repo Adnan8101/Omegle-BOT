@@ -3,6 +3,7 @@ import { Command } from '../../core/command';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { voiceTrackingService } from '../../services/voice/VoiceTrackingService';
 import { Resolver } from '../../util/Resolver';
+import { db } from '../../data/db';
 
 const CROSS = '<:cross:1469273232929456314>';
 
@@ -114,6 +115,54 @@ export const VoiceStats: Command = {
                         inline: true
                     }
                 );
+
+            // Get channel breakdown
+            const sessions = await db.voiceTracking.findMany({
+                where: {
+                    guild_id: ctx.guildId,
+                    user_id: targetUserId
+                }
+            });
+
+            if (sessions.length > 0) {
+                const channelStats = new Map<string, { time: number; sessions: number }>();
+                const now = new Date();
+
+                for (const session of sessions) {
+                    const channelId = session.channel_id;
+                    if (!channelStats.has(channelId)) {
+                        channelStats.set(channelId, { time: 0, sessions: 0 });
+                    }
+                    const chStats = channelStats.get(channelId)!;
+                    chStats.sessions++;
+
+                    let sessionTime: number;
+                    if (session.left_at) {
+                        sessionTime = Math.floor((session.left_at.getTime() - session.joined_at.getTime()) / 1000);
+                    } else {
+                        sessionTime = Math.floor((now.getTime() - session.joined_at.getTime()) / 1000);
+                    }
+                    chStats.time += sessionTime;
+                }
+
+                // Sort by time and get top 5 channels
+                const sortedChannels = Array.from(channelStats.entries())
+                    .sort((a, b) => b[1].time - a[1].time)
+                    .slice(0, 5);
+
+                let channelText = '';
+                for (const [channelId, chStats] of sortedChannels) {
+                    const channel = await guild.channels.fetch(channelId).catch(() => null);
+                    const channelName = channel?.name || `Deleted (${channelId.slice(0, 8)})`;
+                    channelText += `**${channelName}:** ${formatDuration(chStats.time)} (${chStats.sessions} sessions)\n`;
+                }
+
+                embed.addFields({
+                    name: 'Top Voice Channels',
+                    value: channelText || 'No channels found',
+                    inline: false
+                });
+            }
 
             if (stats.last_joined_at) {
                 embed.setFooter({ text: `Last seen: ${stats.last_joined_at.toLocaleString()}` });
