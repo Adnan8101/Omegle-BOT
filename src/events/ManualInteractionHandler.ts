@@ -162,24 +162,10 @@ async function sendManualLog(
             `• **Note/Proof:** ${manualData.note_proof || 'N/A'}${reviewedByText}\n\n` +
             `ManualId : ${manualData.manual_number} | mod : ${manualData.moderator_id}`;
 
-        // Action buttons
-        const row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`manual_addmod_${manualData.id}`)
-                    .setLabel('Add Moderator')
-                    .setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder()
-                    .setCustomId(`manual_addmember_${manualData.id}`)
-                    .setLabel('Add Member')
-                    .setStyle(ButtonStyle.Secondary)
-            );
-
         const msg = await webhook.send({
             username: moderator?.username || 'Moderator',
             avatarURL: moderator?.displayAvatarURL() || undefined,
-            content,
-            components: [row]
+            content
         });
 
         return msg.id;
@@ -244,21 +230,8 @@ async function updateManualLog(
             `• **Note/Proof:** ${manualData.note_proof || 'N/A'}${reviewedByText}\n\n` +
             `ManualId : ${manualData.manual_number} | mod : ${manualData.moderator_id}`;
 
-        const row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`manual_addmod_${manualData.id}`)
-                    .setLabel('Add Moderator')
-                    .setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder()
-                    .setCustomId(`manual_addmember_${manualData.id}`)
-                    .setLabel('Add Member')
-                    .setStyle(ButtonStyle.Secondary)
-            );
-
         await webhook.editMessage(messageId, {
-            content,
-            components: [row]
+            content
         });
     } catch (err) {
         console.error('Error updating manual log:', err);
@@ -406,10 +379,20 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             const targetUser = await client.users.fetch(targetId).catch(() => null);
 
+            // Check if there's existing preview data to restore
+            let existingPreview: ManualPreviewData | undefined;
+            for (const [key, value] of manualPreviewStore.entries()) {
+                if (value.targetId === targetId && value.moderatorId === interaction.user.id) {
+                    existingPreview = value;
+                    manualPreviewStore.delete(key); // Remove old entry
+                    break;
+                }
+            }
+
             // Generate unique preview ID
             const previewId = `${interaction.user.id}_${targetId}_${Date.now()}`;
 
-            // Store preview data
+            // Store preview data, preserving selections if they exist
             manualPreviewStore.set(previewId, {
                 targetId,
                 offense,
@@ -417,8 +400,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 advise,
                 noteProof,
                 moderatorId: interaction.user.id,
-                selectedReviewers: [],
-                selectedMembers: []
+                selectedReviewers: existingPreview?.selectedReviewers || [],
+                selectedMembers: existingPreview?.selectedMembers || []
             });
 
             // Auto-cleanup after 10 minutes
@@ -427,15 +410,27 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             // Show preview with dropdowns
             const previewEmbed = new EmbedBuilder()
                 .setColor(EMBED_COLOR)
-                .setTitle('📋 Manual Preview')
+                .setTitle('Manual Preview')
                 .setDescription(
                     `**Target:** ${targetUser ? `${targetUser.username}` : `<@${targetId}>`}\n\n` +
                     `**Offense:** ${offense}\n` +
                     `**Action:** ${action}\n` +
                     `**Advise:** ${advise || 'N/A'}\n` +
-                    `**Note / Proof:** ${noteProof || 'N/A'}\n\n` +
-                    `Use the dropdowns below to add moderators (reviewers) or members (copy manual to them).`
+                    `**Note/Proof:** ${noteProof || 'N/A'}`
                 );
+
+            // Show current selections if any
+            let selectionsText = '';
+            if (existingPreview?.selectedReviewers && existingPreview.selectedReviewers.length > 0) {
+                selectionsText += `\n**Reviewers:** ${existingPreview.selectedReviewers.map(id => `<@${id}>`).join(', ')}`;
+            }
+            if (existingPreview?.selectedMembers && existingPreview.selectedMembers.length > 0) {
+                selectionsText += `\n**Copy to:** ${existingPreview.selectedMembers.map(id => `<@${id}>`).join(', ')}`;
+            }
+
+            if (selectionsText) {
+                previewEmbed.addFields({ name: 'Current Selections', value: selectionsText });
+            }
             
             const modMenu = new UserSelectMenuBuilder()
                 .setCustomId(`manual_preview_addmod_${previewId}`)
@@ -574,8 +569,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             new ActionRowBuilder<TextInputBuilder>().addComponents(noteInput)
         );
 
-        // Clean up old preview data
-        manualPreviewStore.delete(previewId);
+        // Keep preview data for when modal is resubmitted
+        // Don't delete it - we want to preserve the selections
 
         await interaction.showModal(modal);
     }
