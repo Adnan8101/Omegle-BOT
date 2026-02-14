@@ -51,12 +51,17 @@ export const Lock: Command = {
             } else if (channel?.type === ChannelType.GuildVoice) {
                 // For voice channels, find the associated text channel
                 const voiceChannel = channel as VoiceChannel;
-                const textChannels = guild.channels.cache.filter(ch => 
-                    ch.type === ChannelType.GuildText && 
-                    ch.parentId === voiceChannel.id
-                );
-                if (textChannels.size > 0) {
-                    targetChannel = textChannels.first() as TextChannel;
+                
+                // Look for text channel with same name in same parent category
+                const associatedTextChannel = guild.channels.cache.find(ch => 
+                    ch.type === ChannelType.GuildText &&
+                    ch.parentId === voiceChannel.parentId &&
+                    (ch.name.toLowerCase() === voiceChannel.name.toLowerCase() ||
+                     ch.name.toLowerCase().includes(voiceChannel.name.toLowerCase()))
+                ) as TextChannel;
+                
+                if (associatedTextChannel) {
+                    targetChannel = associatedTextChannel;
                 }
             }
         } else {
@@ -69,7 +74,7 @@ export const Lock: Command = {
         if (!targetChannel) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-                .setDescription(`${CROSS} Channel not found`);
+                .setDescription(`${CROSS} This command only works in text channels or you need to specify a channel`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
