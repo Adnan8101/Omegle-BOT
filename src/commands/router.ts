@@ -31,7 +31,7 @@ const mailCommands = ['openmail', 'close', 'claim', 'unclaim', 'ticketpanel',
     'claimedtickets', 'inactivemails', 'ticketclear'];
 const adminCommands = ['setupmail', 'deletesetup', 'cc', 'modrole', 'staffrole', 'srmodrole',
     'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig', 'modlogsetup',
-    'manual-logs-channel', 'manuallogschannel'];
+    'manual-logs-channel', 'manuallogschannel', 'custom_vc_role', 'customvcrole'];
 const utilityCommands = ['vclogs', 'clogs', 'wv', 'help'];
 const giveawayCommandNames = ['gcreate', 'gstart', 'gend', 'greroll', 'gcancel',
     'gdelete', 'glist', 'ghistory', 'grefresh', 'gresume', 'gstop', 'gschedule'];

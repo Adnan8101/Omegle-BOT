@@ -157,8 +157,28 @@ export const manualLogChannelCommand = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addChannelOption(opt => opt.setName('channel').setDescription('Channel for manual logs').setRequired(true));
 
+export const customVCRoleCommand = new SlashCommandBuilder()
+    .setName('custom_vc_role')
+    .setDescription('Manage voice channel role assignments')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(sub =>
+        sub.setName('add')
+            .setDescription('Add a voice channel to role mapping')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Voice channel').setRequired(true))
+            .addRoleOption(opt => opt.setName('role').setDescription('Role to assign').setRequired(true))
+    )
+    .addSubcommand(sub =>
+        sub.setName('remove')
+            .setDescription('Remove a voice channel to role mapping')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Voice channel').setRequired(true))
+    )
+    .addSubcommand(sub =>
+        sub.setName('show')
+            .setDescription('Show all voice channel role mappings')
+    );
+
 export const adminCommands = [
     setupmailCommand, deletesetupCommand, ccCommand, modroleCommand, 
     staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand, modlogsetupCommand,
-    manualLogChannelCommand
+    manualLogChannelCommand, customVCRoleCommand
 ];

@@ -560,6 +560,18 @@ model ManualConfig {
   @@map("manual_config")
 }
 
+model VoiceChannelRole {
+  id         String @id @default(uuid())
+  guild_id   String
+  channel_id String
+  role_id    String
+  created_at DateTime @default(now())
+
+  @@unique([guild_id, channel_id])
+  @@index([guild_id])
+  @@map("voice_channel_roles")
+}
+
 // =====================================
 // END MANUAL SYSTEM MODELS
 // =====================================

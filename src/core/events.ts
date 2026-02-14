@@ -12,6 +12,7 @@ import '../events/SetupInteractionHandler';
 import '../events/MailInteractionHandler';
 import '../events/MailGuildHandler';
 import '../events/ManualInteractionHandler';
+import '../events/VoiceChannelRoleHandler';
 import { handleMessageReactionAdd, handleMessageReactionRemove } from '../events/giveawayReactionHandler';
 import { giveawayCommands, prefixCommandMap } from '../commands/giveaways';
 import { handleVoiceStateUpdate } from '../events/AutoDragHandler';

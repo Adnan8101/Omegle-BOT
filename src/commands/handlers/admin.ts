@@ -28,6 +28,18 @@ export async function handleAdminCommand(interaction: ChatInputCommandInteractio
     } else if (cmd === 'manual-logs-channel') {
         const channel = interaction.options.getChannel('channel', true);
         args.push(channel.id);
+    } else if (cmd === 'custom_vc_role') {
+        const subcommand = interaction.options.getSubcommand();
+        args.push(subcommand);
+        
+        if (subcommand === 'add') {
+            const channel = interaction.options.getChannel('channel', true);
+            const role = interaction.options.getRole('role', true);
+            args.push(channel.id, role.id);
+        } else if (subcommand === 'remove') {
+            const channel = interaction.options.getChannel('channel', true);
+            args.push(channel.id);
+        }
     } else if (cmd === 'cc' || cmd === 'modrole' || cmd === 'staffrole' || cmd === 'srmodrole' || cmd === 'wv_allowed_role') {
         const subcommand = interaction.options.getSubcommand();
         args.push(subcommand);
