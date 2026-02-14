@@ -53,7 +53,7 @@ async function buildManualPageEmbed(
             `**Date:** <t:${createdTs}:F> (<t:${createdTs}:R>)`
         )
         .setThumbnail(targetUser?.displayAvatarURL() || null)
-        .setFooter({ text: `Manual ${result.page} of ${result.totalPages} • ID: ${manual.id}` });
+        .setFooter({ text: `Manual ${result.page} of ${result.totalPages} • ID: ${manual.manual_number}` });
 
     return { embed, total: result.total, page: result.page, totalPages: result.totalPages };
 }

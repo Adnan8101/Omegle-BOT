@@ -105,7 +105,7 @@ export const Whois: Command = {
                     .setStyle(ButtonStyle.Secondary)
             );
 
-        const message = await ctx.reply({ embeds: [embed], components: [row] });
+        const message = await ctx.reply({ content: `<@${targetUser.id}>`, embeds: [embed], components: [row] });
 
         // Handle modlogs button — manuals & addmanual are handled by ManualInteractionHandler
         const collector = message.createMessageComponentCollector({

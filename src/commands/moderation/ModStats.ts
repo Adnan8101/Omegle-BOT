@@ -1,14 +1,13 @@
 import { Context } from '../../core/context';
 import { modService } from '../../services/moderation/ModerationService';
 import { Resolver } from '../../util/Resolver';
-import { EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
 import { hasModRole } from '../../util/modRole';
 import { parseSmartDuration } from '../../util/time';
 import { db } from '../../data/db';
 
-const TICK = '<:tickYes:1469272837192814623>';
 const ITEMS_PER_PAGE = 6;
 
 function formatTimeSince(date: Date): string {
@@ -119,42 +118,15 @@ export const ModStats: Command = {
 
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(
-                    `${TICK} **${userName}**${timeLabel ? ` \u2022 Last ${timeLabel}` : ''}\\n\\n` +
-                    `Ban: **${timeLabel ? filteredBans : stats.bans || 0}** \u2022 ` +
-                    `Kick: **${timeLabel ? filteredKicks : stats.kicks || 0}**\\n` +
-                    `Mute: **${timeLabel ? filteredMutes : stats.mutes || 0}** \u2022 ` +
-                    `Warn: **${timeLabel ? filteredWarns : stats.warns || 0}**\\n\\n` +
-                    `Total: **${timeLabel ? filteredTotal : total}**`
-                );
+                .setAuthor({ name: userName })
+                .setDescription(
+                    `**Ban:** ${timeLabel ? filteredBans : stats.bans || 0} • **Kick:** ${timeLabel ? filteredKicks : stats.kicks || 0}\n` +
+                    `**Mute:** ${timeLabel ? filteredMutes : stats.mutes || 0} • **Warn:** ${timeLabel ? filteredWarns : stats.warns || 0}\n\n` +
+                    `**Total:** ${timeLabel ? filteredTotal : total}`
+                )
+                .setFooter({ text: timeLabel ? `Last ${timeLabel}` : 'All time' });
 
-            const row = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`delete_modstats_${ctx.authorId}`)
-                        .setLabel('Delete')
-                        .setEmoji('🗑️')
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-            const message = await ctx.reply({ embeds: [embed], components: [row] });
-
-            // Handle delete button
-            const collector = message.createMessageComponentCollector({
-                filter: (i: any) => i.customId.startsWith('delete_modstats_') && i.user.id === ctx.authorId,
-                time: 60000
-            });
-
-            collector.on('collect', async (interaction: any) => {
-                try {
-                    await interaction.update({ content: '✓ Message deleted', embeds: [], components: [] });
-                    setTimeout(() => {
-                        interaction.deleteReply().catch(() => { });
-                    }, 2000);
-                } catch (e) {
-                    // Already deleted
-                }
-            });
+            await ctx.reply({ embeds: [embed] });
 
         } catch (err: any) {
             await ctx.reply({ content: `Failed to fetch stats: ${err.message}`, ephemeral: true });

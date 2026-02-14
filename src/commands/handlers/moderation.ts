@@ -83,6 +83,10 @@ export async function handleModerationCommand(interaction: ChatInputCommandInter
         const id = interaction.options.getInteger('id');
         if (id) args.push(id.toString());
     }
+    else if (cmd === 'delete-manual') {
+        const id = interaction.options.getInteger('id');
+        if (id) args.push(id.toString());
+    }
 
     return CommandExecutor.execute(command.execute, interaction, args);
 }

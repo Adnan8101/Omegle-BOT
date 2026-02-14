@@ -25,7 +25,7 @@ const moderationCommands = ['ban', 'kick', 'mute', 'unmute', 'warn', 'unban', 'r
     'delcase', 'modleaderboard', 'modlogs', 'modstats', 'whois', 'caseinfo',
     'av', 'banword', 'checkperms', 'dm', 'lock', 'unlock', 'hide', 'unhide',
     'move', 'mv', 'role', 'inrole', 'ad', 'autodrag', 'suggestion',
-    'manuals', 'edit-manual', 'editmanual'];
+    'manuals', 'edit-manual', 'editmanual', 'delete-manual', 'deletemanual'];
 const afkCommands = ['afk', 'afkclear', 'afklist', 'afksettings'];
 const mailCommands = ['openmail', 'close', 'claim', 'unclaim', 'ticketpanel',
     'claimedtickets', 'inactivemails', 'ticketclear'];

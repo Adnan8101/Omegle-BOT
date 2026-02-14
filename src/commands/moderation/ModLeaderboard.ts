@@ -5,8 +5,6 @@ import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
 import { hasModRole } from '../../util/modRole';
 
-const TICK = '<:tickYes:1469272837192814623>';
-
 export const ModLeaderboard: Command = {
     name: 'modleaderboard',
     description: 'Show top moderators by case count',
@@ -33,18 +31,15 @@ export const ModLeaderboard: Command = {
                 return;
             }
 
-            const medals = ['🥇', '🥈', '🥉'];
             const description = stats.slice(0, 10).map((s: any, i: number) => {
                 const total = (s.bans || 0) + (s.kicks || 0) + (s.mutes || 0) + (s.warns || 0);
-                const medal = i < 3 ? medals[i] : `${i + 1}.`;
-                return `${medal} <@${s.moderator_id}> • **${total}**`;
+                return `**${i + 1}.** <@${s.moderator_id}> • ${total} actions`;
             }).join('\n');
 
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(
-                    `${TICK} **Mod Leaderboard**\n\n${description}`
-                );
+                .setTitle('Moderator Leaderboard')
+                .setDescription(description);
 
             await ctx.reply({ embeds: [embed] });
         } catch (err: any) {

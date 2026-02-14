@@ -231,9 +231,15 @@ export const editManualCommand = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addIntegerOption(opt => opt.setName('id').setDescription('Manual number to edit').setRequired(true));
 
+export const deleteManualCommand = new SlashCommandBuilder()
+    .setName('delete-manual')
+    .setDescription('Delete a manual entry (Sr Mod+ only)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addIntegerOption(opt => opt.setName('id').setDescription('Manual number to delete').setRequired(true));
+
 export const modCommands = [
     banCommand, kickCommand, muteCommand, unmuteCommand, warnCommand, unbanCommand, reasonCommand,
     delcaseCommand, modleaderboardCommand, modlogsCommand, modstatsCommand, whoisCommand, caseinfoCommand,
     avCommand, banwordCommand, checkpermsCommand, dmCommand, lockCommand, unlockCommand, hideCommand, unhideCommand,
-    moveCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand, editManualCommand
+    moveCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand, editManualCommand, deleteManualCommand
 ];

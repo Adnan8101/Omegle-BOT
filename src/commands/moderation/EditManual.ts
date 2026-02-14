@@ -113,7 +113,7 @@ export const EditManual: Command = {
                     `**Date:** <t:${createdTs}:F>\n\n` +
                     `> Use the slash command \`/edit-manual\` to edit this manual via modal.`
                 )
-                .setFooter({ text: `Manual ID: ${manual.id}` });
+                .setFooter({ text: `Manual ID: ${manual.manual_number}` });
 
             await ctx.reply({ embeds: [embed] });
         }

@@ -62,6 +62,7 @@ import { SuggestionAction } from './moderation/SuggestionAction';
 import { ModCooldown } from './admin/ModCooldown';
 import { Manuals } from './moderation/Manuals';
 import { EditManual } from './moderation/EditManual';
+import { DeleteManual } from './moderation/DeleteManual';
 import { ManualLogsChannel } from './admin/ManualLogsChannel';
 
 // Sticky subcommands
@@ -152,6 +153,8 @@ export const CommandRegistry: Record<string, Command> = {
     'manuals': Manuals,
     'edit-manual': EditManual,
     'editmanual': EditManual,
+    'delete-manual': DeleteManual,
+    'deletemanual': DeleteManual,
     'manual-logs-channel': ManualLogsChannel,
     'manuallogschannel': ManualLogsChannel,
 

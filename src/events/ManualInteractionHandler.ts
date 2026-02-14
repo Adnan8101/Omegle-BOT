@@ -125,7 +125,6 @@ async function sendManualLog(
         const embed = new EmbedBuilder()
             .setColor(EMBED_COLOR)
             .setDescription(
-                `**${isEdit ? '📝 Manual Edited' : '📋 New Manual'}**\n\n` +
                 `**Manual #${manualData.manual_number}**\n\n` +
                 `**Username:** ${targetUser?.username || 'Unknown'}\n` +
                 `**User ID:** ${targetId}\n` +
@@ -137,7 +136,7 @@ async function sendManualLog(
                 `**${isEdit ? 'Edited' : 'Added'} by:** ${moderator?.username || manualData.moderator_id}\n` +
                 `**Date:** <t:${createdTs}:F>`
             )
-            .setFooter({ text: `Manual ID: ${manualData.id}` });
+            .setFooter({ text: `Manual ID: ${manualData.manual_number}` });
 
         const msg = await webhook.send({
             username: targetUser?.username || 'Unknown User',
@@ -320,7 +319,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                     `**Advise:** ${advise || 'N/A'}\n` +
                     `**Note / Proof:** ${noteProof || 'N/A'}`
                 )
-                .setFooter({ text: `Manual ID: ${manual.id}` });
+                .setFooter({ text: `Manual ID: ${manual.manual_number}` });
 
             await interaction.editReply({ embeds: [embed] });
         } catch (err: any) {
@@ -350,19 +349,47 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 note_proof: noteProof
             });
 
-            // Send updated webhook log
-            const logMsgId = await sendManualLog(interaction.guildId!, updated.target_id, {
-                manual_number: updated.manual_number,
-                offense: updated.offense,
-                action: updated.action,
-                advise: updated.advise,
-                note_proof: updated.note_proof,
-                moderator_id: updated.moderator_id,
-                id: updated.id
-            }, true);
+            // Edit the original webhook message instead of sending new
+            if (updated.log_message_id) {
+                const config = await manualService.getConfig(interaction.guildId!);
+                if (config?.log_channel_id) {
+                    const guild = client.guilds.cache.get(interaction.guildId!);
+                    const channel = guild?.channels.cache.get(config.log_channel_id);
+                    if (channel && channel.isTextBased()) {
+                        const textChannel = channel as TextChannel;
+                        try {
+                            const webhooks = await textChannel.fetchWebhooks();
+                            const webhook = webhooks.find(w => w.name === 'Manual Logs');
+                            if (webhook) {
+                                const targetUser = await client.users.fetch(updated.target_id).catch(() => null);
+                                const moderator = await client.users.fetch(updated.moderator_id).catch(() => null);
+                                const createdTs = Math.floor(Date.now() / 1000);
 
-            if (logMsgId) {
-                await manualService.setLogMessageId(updated.id, logMsgId);
+                                const logEmbed = new EmbedBuilder()
+                                    .setColor(EMBED_COLOR)
+                                    .setDescription(
+                                        `**Manual #${updated.manual_number}**\n\n` +
+                                        `**Username:** ${targetUser?.username || 'Unknown'}\n` +
+                                        `**User ID:** ${updated.target_id}\n` +
+                                        `**User Mention:** <@${updated.target_id}>\n\n` +
+                                        `**Offense:** ${updated.offense}\n` +
+                                        `**Action:** ${updated.action}\n` +
+                                        `**Advise:** ${updated.advise || 'N/A'}\n` +
+                                        `**Note / Proof:** ${updated.note_proof || 'N/A'}\n\n` +
+                                        `**Edited by:** ${moderator?.username || updated.moderator_id}\n` +
+                                        `**Date:** <t:${createdTs}:F>`
+                                    )
+                                    .setFooter({ text: `Manual ID: ${updated.manual_number}` });
+
+                                await webhook.editMessage(updated.log_message_id, {
+                                    embeds: [logEmbed]
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Error editing manual log webhook:', err);
+                        }
+                    }
+                }
             }
 
             const targetUser = await client.users.fetch(updated.target_id).catch(() => null);
@@ -377,7 +404,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                     `**Advise:** ${advise || 'N/A'}\n` +
                     `**Note / Proof:** ${noteProof || 'N/A'}`
                 )
-                .setFooter({ text: `Manual ID: ${updated.id}` });
+                .setFooter({ text: `Manual ID: ${updated.manual_number}` });
 
             await interaction.editReply({ embeds: [embed] });
         } catch (err: any) {
