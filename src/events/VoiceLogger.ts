@@ -1,7 +1,42 @@
-import { Events, VoiceState } from 'discord.js';
+import { Events, VoiceState, ChannelType } from 'discord.js';
 import { client } from '../core/discord';
 import { activityLogService } from '../services/logging/ActivityLogService';
 import { voiceTrackingService } from '../services/voice/VoiceTrackingService';
+
+// Initialize tracking for users already in voice channels when bot starts
+client.once(Events.ClientReady, async () => {
+    console.log('🎙️ Initializing voice tracking for existing voice channel members...');
+    
+    try {
+        for (const guild of client.guilds.cache.values()) {
+            const voiceChannels = guild.channels.cache.filter(
+                ch => ch.type === ChannelType.GuildVoice || ch.type === ChannelType.GuildStageVoice
+            );
+            
+            for (const channel of voiceChannels.values()) {
+                if (!('members' in channel)) continue;
+                
+                for (const member of channel.members.values()) {
+                    if (member.user.bot) continue;
+                    
+                    const voiceState = member.voice;
+                    if (voiceState.channelId) {
+                        await voiceTrackingService.handleJoin(
+                            guild.id,
+                            member.id,
+                            voiceState.channelId,
+                            voiceState
+                        );
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ Voice tracking initialized for all existing members');
+    } catch (error) {
+        console.error('❌ Error initializing voice tracking:', error);
+    }
+});
 
 client.on(Events.VoiceStateUpdate, async (oldState: VoiceState, newState: VoiceState) => {
     // Determine action
