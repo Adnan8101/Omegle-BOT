@@ -176,7 +176,7 @@ class VoiceTrackingService {
     }
 
     /**
-     * Get voice statistics for a user
+     * Get voice statistics for a user (includes active session time)
      */
     async getUserStats(guildId: string, userId: string): Promise<any> {
         console.log(`[VoiceTracking] 📊 Getting stats for Guild: ${guildId}, User: ${userId}`);
@@ -191,6 +191,60 @@ class VoiceTrackingService {
         console.log(`[VoiceTracking] ${stats ? '✅ Stats found' : '⚠️ No stats found'} for user ${userId}`);
         if (stats) {
             console.log(`[VoiceTracking] Stats: ${stats.total_sessions} sessions, ${stats.total_time_in_vc}s total time`);
+            
+            // Check if user has an active session and add current time
+            const activeSession = await db.voiceTracking.findFirst({
+                where: {
+                    guild_id: guildId,
+                    user_id: userId,
+                    left_at: null
+                },
+                orderBy: {
+                    joined_at: 'desc'
+                }
+            });
+            
+            if (activeSession) {
+                const now = new Date();
+                const currentSessionTime = Math.floor((now.getTime() - activeSession.joined_at.getTime()) / 1000);
+                const currentStateTime = Math.floor((now.getTime() - activeSession.last_state_change.getTime()) / 1000);
+                
+                console.log(`[VoiceTracking] 🔴 User has ACTIVE session:`);
+                console.log(`[VoiceTracking]    - Joined at: ${activeSession.joined_at.toISOString()}`);
+                console.log(`[VoiceTracking]    - Current session time: ${currentSessionTime}s`);
+                console.log(`[VoiceTracking]    - Last state change: ${activeSession.last_state_change.toISOString()}`);
+                console.log(`[VoiceTracking]    - Current state time: ${currentStateTime}s`);
+                console.log(`[VoiceTracking]    - Was muted: ${activeSession.was_muted}, Was deafened: ${activeSession.was_deafened}`);
+                console.log(`[VoiceTracking]    - Accumulated - Speaking: ${activeSession.time_speaking}s, Muted: ${activeSession.time_muted}s, Deafened: ${activeSession.time_deafened}s`);
+                
+                // Add current session time to totals
+                stats.total_time_in_vc += currentSessionTime;
+                
+                // Add accumulated times from session plus current state time
+                if (activeSession.was_deafened) {
+                    stats.total_time_deafened += activeSession.time_deafened + currentStateTime;
+                    stats.total_time_muted += activeSession.time_muted;
+                    stats.total_time_speaking += activeSession.time_speaking;
+                    stats.total_time_listening += activeSession.time_listening;
+                } else if (activeSession.was_muted) {
+                    stats.total_time_muted += activeSession.time_muted + currentStateTime;
+                    stats.total_time_deafened += activeSession.time_deafened;
+                    stats.total_time_speaking += activeSession.time_speaking;
+                    stats.total_time_listening += activeSession.time_listening;
+                } else {
+                    stats.total_time_speaking += activeSession.time_speaking + currentStateTime;
+                    stats.total_time_listening += activeSession.time_listening + currentStateTime;
+                    stats.total_time_muted += activeSession.time_muted;
+                    stats.total_time_deafened += activeSession.time_deafened;
+                }
+                
+                console.log(`[VoiceTracking] 📊 Final calculated stats:`);
+                console.log(`[VoiceTracking]    - Total time: ${stats.total_time_in_vc}s`);
+                console.log(`[VoiceTracking]    - Speaking: ${stats.total_time_speaking}s`);
+                console.log(`[VoiceTracking]    - Muted: ${stats.total_time_muted}s`);
+                console.log(`[VoiceTracking]    - Deafened: ${stats.total_time_deafened}s`);
+                console.log(`[VoiceTracking]    - Listening: ${stats.total_time_listening}s`);
+            }
         }
         return stats;
     }

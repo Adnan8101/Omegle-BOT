@@ -54,7 +54,7 @@ export const VoiceStats: Command = {
         try {
             const stats = await voiceTrackingService.getUserStats(ctx.guildId, targetUserId);
 
-            if (!stats || stats.total_time_in_vc === 0) {
+            if (!stats) {
                 const embed = new EmbedBuilder()
                     .setColor(0x2b2d31)
                     .setDescription(`${CROSS} No voice statistics found for ${targetUser.username}.`);
