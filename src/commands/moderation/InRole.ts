@@ -1,6 +1,7 @@
 import { Context } from '../../core/context';
 import { EmbedBuilder, PermissionFlagsBits, Role } from 'discord.js';
 import { Command } from '../../core/command';
+import { canPerformAction } from '../../util/rolePermissions';
 
 const CROSS = '<:cross:1469273232929456314>';
 
@@ -15,14 +16,18 @@ export const InRole: Command = {
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         const guild = ctx.inner.guild;
+        const member = ctx.inner.member;
 
-        if (!guild) {
+        if (!guild || !member) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
+
+        const canPerform = await canPerformAction(ctx.guildId, member, 'inrole');
+        if (!canPerform) return;
 
         if (args.length === 0) {
             const embed = new EmbedBuilder()

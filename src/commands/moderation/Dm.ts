@@ -3,6 +3,7 @@ import { Resolver } from '../../util/Resolver';
 import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
 import { ModLogger } from '../../services/logging/ModLogger';
+import { canPerformAction } from '../../util/rolePermissions';
 
 const TICK = '<:tickYes:1469272837192814623>';
 const CROSS = '<:cross:1469273232929456314>';
@@ -13,11 +14,14 @@ export const Dm: Command = {
     category: 'Moderator Utils',
     syntax: 'dm <@user> <message>',
     example: 'dm @User Hello there',
-    permissions: [PermissionFlagsBits.ManageMessages],
+    permissions: [PermissionFlagsBits.Administrator],
     modAction: 'dm',
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
+
+        const canPerform = await canPerformAction(ctx.guildId, ctx.inner.member, 'dm');
+        if (!canPerform) return;
 
         if (args.length < 2) {
             await ctx.reply({ content: 'Usage: !dm <user> <message>', ephemeral: true });

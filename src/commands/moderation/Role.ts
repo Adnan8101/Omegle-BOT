@@ -3,6 +3,7 @@ import { EmbedBuilder, PermissionFlagsBits, Role, GuildMember, ActionRowBuilder,
 import { Command } from '../../core/command';
 import { ModLogger } from '../../services/logging/ModLogger';
 import { findBestRoleMatch, isExactRoleMatch } from '../../util/fuzzyMatch';
+import { canPerformAction } from '../../util/rolePermissions';
 
 const TICK = '<:tickYes:1469272837192814623>';
 const CROSS = '<:cross:1469273232929456314>';
@@ -23,10 +24,13 @@ export const RoleCommand: Command = {
         if (!guild || !member) {
             const embed = new EmbedBuilder()
                 .setColor(0x2b2d31)
-            .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
+
+        const canPerform = await canPerformAction(ctx.guildId, member, 'role');
+        if (!canPerform) return;
 
         // Check bot permissions
         if (!guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles)) {

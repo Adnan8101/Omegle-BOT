@@ -4,6 +4,7 @@ import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
 import { sendModDm } from '../../util/moderationDm';
 import { ModLogger } from '../../services/logging/ModLogger';
+import { canPerformAction } from '../../util/rolePermissions';
 
 const TICK = '<:tickYes:1469272837192814623>';
 
@@ -18,6 +19,9 @@ export const DelCase: Command = {
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
+
+        const canPerform = await canPerformAction(ctx.guildId, ctx.inner.member, 'delcase');
+        if (!canPerform) return;
 
         const caseNumStr = args[0];
         if (!caseNumStr || isNaN(parseInt(caseNumStr))) {

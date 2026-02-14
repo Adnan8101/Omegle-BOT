@@ -4,7 +4,7 @@ import { Resolver } from '../../util/Resolver';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
+import { hasSrModRole } from '../../util/rolePermissions';
 import { parseSmartDuration } from '../../util/time';
 import { db } from '../../data/db';
 
@@ -28,17 +28,17 @@ export const ModStats: Command = {
     category: 'Admin',
     syntax: 'modstats [user]',
     example: 'modstats @User',
-    permissions: [PermissionFlagsBits.ManageMessages],
+    permissions: [PermissionFlagsBits.Administrator],
     modAction: 'modstats',
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
         const perms = ctx.inner.member.permissions;
-        const hasPerm = ModStats.permissions.some(p => hasPermission(perms, p));
+        const hasPerm = hasPermission(perms, PermissionFlagsBits.Administrator);
 
-        const hasRole = await hasModRole(ctx.guildId, ctx.inner.member);
+        const hasSrMod = await hasSrModRole(ctx.guildId, ctx.inner.member);
 
-        if (!hasPerm && !hasRole) return;
+        if (!hasPerm && !hasSrMod) return;
 
         // Parse arguments: [user] [time]
         let targetId = ctx.authorId;

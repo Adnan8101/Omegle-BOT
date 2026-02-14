@@ -3,6 +3,7 @@ import { autoModService } from '../../services/moderation/AutoModService';
 import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
 import { ModLogger } from '../../services/logging/ModLogger';
+import { canPerformAction } from '../../util/rolePermissions';
 
 const TICK = '<:tickYes:1469272837192814623>';
 
@@ -12,11 +13,14 @@ export const BanWord: Command = {
     category: 'Moderator Utils',
     syntax: 'banword <add|remove|list> [word]',
     example: 'banword add badword',
-    permissions: [PermissionFlagsBits.ManageMessages],
+    permissions: [PermissionFlagsBits.Administrator],
     modAction: 'banword',
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
+
+        const canPerform = await canPerformAction(ctx.guildId, ctx.inner.member, 'banword');
+        if (!canPerform) return;
 
         const input = args.join(' ');
         if (!input) {

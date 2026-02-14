@@ -3,7 +3,7 @@ import { modService } from '../../services/moderation/ModerationService';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
+import { hasSrModRole } from '../../util/rolePermissions';
 
 export const CaseInfo: Command = {
     name: 'caseinfo',
@@ -11,17 +11,17 @@ export const CaseInfo: Command = {
     category: 'Admin',
     syntax: 'caseinfo <case_number>',
     example: 'caseinfo 123',
-    permissions: [PermissionFlagsBits.ManageMessages],
+    permissions: [PermissionFlagsBits.Administrator],
     modAction: 'caseinfo',
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
         const perms = ctx.inner.member.permissions;
-        const hasPerm = CaseInfo.permissions.some(p => hasPermission(perms, p));
+        const hasPerm = hasPermission(perms, PermissionFlagsBits.Administrator);
 
-        const hasRole = await hasModRole(ctx.guildId, ctx.inner.member);
+        const hasSrMod = await hasSrModRole(ctx.guildId, ctx.inner.member);
 
-        if (!hasPerm && !hasRole) return;
+        if (!hasPerm && !hasSrMod) return;
 
         const caseNumStr = args[0];
         if (!caseNumStr || isNaN(parseInt(caseNumStr))) {

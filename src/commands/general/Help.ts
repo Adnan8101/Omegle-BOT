@@ -3,7 +3,7 @@ import { CommandRegistry } from '../registry';
 import { EmbedBuilder, Colors, PermissionsBitField } from 'discord.js';
 
 export const Help = async (ctx: Context, args: string[]) => {
-    // Permission check: Only server moderators or above can use this command
+    // Permission check: Only administrators can use this command
     if (!ctx.inner.member) {
         await ctx.reply('This command can only be used in a server.');
         return;
@@ -13,10 +13,9 @@ export const Help = async (ctx: Context, args: string[]) => {
         ? new PermissionsBitField(BigInt(ctx.inner.member.permissions))
         : ctx.inner.member.permissions;
 
-    const hasModPerms = memberPermissions.has(PermissionsBitField.Flags.Administrator) ||
-                        memberPermissions.has(PermissionsBitField.Flags.ManageMessages);
+    const hasAdminPerms = memberPermissions.has(PermissionsBitField.Flags.Administrator);
 
-    if (!hasModPerms) {
+    if (!hasAdminPerms) {
         // Silently ignore if user doesn't have permission
         return;
     }

@@ -2,7 +2,7 @@ import { Context } from '../../core/context';
 import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
+import { hasSrModRole } from '../../util/rolePermissions';
 
 const TICK = '<:tickYes:1469272837192814623>';
 const CROSS = '<:cross:1469273232929456314>';
@@ -13,16 +13,16 @@ export const CheckPerms: Command = {
     category: 'Moderator Utils',
     syntax: 'checkperms <user>',
     example: 'checkperms @User',
-    permissions: [PermissionFlagsBits.ManageMessages],
+    permissions: [PermissionFlagsBits.Administrator],
     modAction: 'checkperms',
     execute: async (ctx: Context, args: string[]) => {
         await ctx.defer();
         if (!ctx.inner.member) return;
         const perms = ctx.inner.member.permissions;
-        const hasPerm = CheckPerms.permissions.some(p => hasPermission(perms, p));
-        const hasRole = await hasModRole(ctx.guildId, ctx.inner.member);
+        const hasPerm = hasPermission(perms, PermissionFlagsBits.Administrator);
+        const hasSrMod = await hasSrModRole(ctx.guildId, ctx.inner.member);
 
-        if (!hasPerm && !hasRole) return;
+        if (!hasPerm && !hasSrMod) return;
 
         const guild = ctx.inner.guild;
         if (!guild) return;
