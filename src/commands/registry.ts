@@ -65,6 +65,8 @@ import { EditManual } from './moderation/EditManual';
 import { DeleteManual } from './moderation/DeleteManual';
 import { ManualLogsChannel } from './admin/ManualLogsChannel';
 import { CustomVCRole } from './admin/CustomVCRole';
+import { VoiceStats } from './admin/VoiceStats';
+import { VoiceLeaderboard } from './admin/VoiceLeaderboard';
 
 // Sticky subcommands
 import { StickyAdd } from './sticky/StickyAdd';
@@ -162,6 +164,12 @@ export const CommandRegistry: Record<string, Command> = {
     // Voice Channel Role System
     'custom_vc_role': CustomVCRole,
     'customvcrole': CustomVCRole,
+
+    // Voice Tracking System
+    'voicestats': VoiceStats,
+    'voiceleaderboard': VoiceLeaderboard,
+    'vcstats': VoiceStats,
+    'vclb': VoiceLeaderboard,
 
     // Sticky Commands (Main + Subcommands for Help display)
     'sticky': StickyCommand,

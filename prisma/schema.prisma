@@ -573,5 +573,57 @@ model VoiceChannelRole {
 }
 
 // =====================================
+// VOICE TRACKING SYSTEM
+// =====================================
+
+model VoiceTracking {
+  id                   String   @id @default(uuid())
+  guild_id             String
+  user_id              String
+  channel_id           String
+  joined_at            DateTime @default(now())
+  left_at              DateTime?
+  
+  // Time tracking in seconds
+  time_speaking        Int      @default(0) // Time with mic on
+  time_muted           Int      @default(0) // Time with mic muted
+  time_deafened        Int      @default(0) // Time deafened
+  time_listening       Int      @default(0) // Time not muted/deafened (active listening)
+  
+  // State tracking
+  was_muted            Boolean  @default(false)
+  was_deafened         Boolean  @default(false)
+  last_state_change    DateTime @default(now())
+
+  @@index([guild_id, user_id])
+  @@index([guild_id, channel_id])
+  @@map("voice_tracking")
+}
+
+model VoiceUserStats {
+  id                      String   @id @default(uuid())
+  guild_id                String
+  user_id                 String
+  
+  // Cumulative time in seconds
+  total_time_in_vc        Int      @default(0)
+  total_time_speaking     Int      @default(0)
+  total_time_muted        Int      @default(0)
+  total_time_deafened     Int      @default(0)
+  total_time_listening    Int      @default(0)
+  
+  // Session counts
+  total_sessions          Int      @default(0)
+  
+  // Stats
+  last_joined_at          DateTime?
+  updated_at              DateTime @updatedAt
+
+  @@unique([guild_id, user_id])
+  @@index([guild_id])
+  @@map("voice_user_stats")
+}
+
+// =====================================
 // END MANUAL SYSTEM MODELS
 // =====================================
