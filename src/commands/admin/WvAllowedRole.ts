@@ -20,7 +20,8 @@ export const WvAllowedRole: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -34,7 +35,8 @@ export const WvAllowedRole: Command = {
 
         if (!subcommand || !['add', 'show', 'list', 'remove'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **WV Access Management**\n\n` +
                     '`wv_allowed_role add <role>` - Add allowed role\n' +
                     '`wv_allowed_role show` - List allowed roles\n' +
@@ -53,7 +55,8 @@ export const WvAllowedRole: Command = {
 
                 if (allowedRoles.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`**No roles configured**\nOnly moderators can use !wv`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`**No roles configured**\nOnly moderators can use !wv`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -63,7 +66,8 @@ export const WvAllowedRole: Command = {
                     .join(', ');
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **WV Allowed Roles**\n\n${roleList}\n\n` +
                         `*${allowedRoles.length} role(s) can use !wv*`
                     );
@@ -75,7 +79,8 @@ export const WvAllowedRole: Command = {
             if (subcommand === 'add') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`wv_allowed_role add @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`wv_allowed_role add @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -92,7 +97,8 @@ export const WvAllowedRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -100,7 +106,8 @@ export const WvAllowedRole: Command = {
                 const role = await guild.roles.fetch(roleId).catch(() => null);
                 if (!role) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Role not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Role not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -116,7 +123,8 @@ export const WvAllowedRole: Command = {
 
                 if (existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> already has access to !wv`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> already has access to !wv`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -130,7 +138,8 @@ export const WvAllowedRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **WV Access Granted**\n\n` +
                         `<@&${roleId}> can now use the !wv command.`
                     );
@@ -141,7 +150,8 @@ export const WvAllowedRole: Command = {
             if (subcommand === 'remove') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`wv_allowed_role remove @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`wv_allowed_role remove @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -158,7 +168,8 @@ export const WvAllowedRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -174,7 +185,8 @@ export const WvAllowedRole: Command = {
 
                 if (!existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> doesn't have access to !wv`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> doesn't have access to !wv`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -189,14 +201,16 @@ export const WvAllowedRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`${TICK} Removed <@&${roleId}> from WV access.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${TICK} Removed <@&${roleId}> from WV access.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

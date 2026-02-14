@@ -225,9 +225,15 @@ export const purgeCommand = new SlashCommandBuilder()
     .addStringOption(opt => opt.setName('start_after').setDescription('Delete messages starting after this message ID'))
     .addStringOption(opt => opt.setName('end_before').setDescription('Delete messages ending before this message ID'));
 
+export const editManualCommand = new SlashCommandBuilder()
+    .setName('edit-manual')
+    .setDescription('Edit an existing manual entry')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+    .addIntegerOption(opt => opt.setName('id').setDescription('Manual number to edit').setRequired(true));
+
 export const modCommands = [
     banCommand, kickCommand, muteCommand, unmuteCommand, warnCommand, unbanCommand, reasonCommand,
     delcaseCommand, modleaderboardCommand, modlogsCommand, modstatsCommand, whoisCommand, caseinfoCommand,
     avCommand, banwordCommand, checkpermsCommand, dmCommand, lockCommand, unlockCommand, hideCommand, unhideCommand,
-    moveCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand
+    moveCommand, roleCommand, inroleCommand, suggestionCommand, purgeCommand, editManualCommand
 ];

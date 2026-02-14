@@ -21,7 +21,8 @@ export const ClaimedTickets: Command = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle(`Claimed Tickets (${tickets.length})`);
+            .setColor(0x2b2d31)
+        .setTitle(`Claimed Tickets (${tickets.length})`);
 
         // Group by staff? or just list
         // Let's just list top 20 for now to avoid size limits

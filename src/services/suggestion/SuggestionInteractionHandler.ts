@@ -125,7 +125,8 @@ export class SuggestionInteractionHandler {
             // Create embed
             const embed = new EmbedBuilder()
                 
-                .setAuthor({
+                .setColor(0x2b2d31)
+            .setAuthor({
                     name: interaction.user.username,
                     iconURL: interaction.user.displayAvatarURL()
                 })
@@ -160,7 +161,8 @@ export class SuggestionInteractionHandler {
             // Create new sticky message
             const stickyEmbed = new EmbedBuilder()
                 
-                .setTitle('Suggestions')
+                .setColor(0x2b2d31)
+            .setTitle('Suggestions')
                 .setDescription('Click the button below to submit a suggestion!');
 
             const button = new ButtonBuilder()

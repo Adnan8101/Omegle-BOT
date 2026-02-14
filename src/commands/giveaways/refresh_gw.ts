@@ -54,7 +54,8 @@ export default {
                 });
                 if (!giveaway || giveaway.guildId !== guildId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} Giveaway not found with that message ID in this server.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} Giveaway not found with that message ID in this server.`)
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
                     }
@@ -100,14 +101,16 @@ export default {
                         });
                     }
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.TICK} Successfully refreshed giveaway!`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.TICK} Successfully refreshed giveaway!`)
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
                     }
                     return ctx.channel.send({ embeds: [embed] });
                 } catch (error) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} Failed to refresh giveaway. Channel or message not found.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} Failed to refresh giveaway. Channel or message not found.`)
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
                     }
@@ -119,7 +122,8 @@ export default {
             });
             if (giveaways.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`${Emojis.CROSS} No giveaways found in this server.`)
+                    .setColor(0x2b2d31)
+                .setDescription(`${Emojis.CROSS} No giveaways found in this server.`)
                     .setTimestamp();
                 if (isInteraction) {
                     return ctx.editReply({ embeds: [embed] });
@@ -192,7 +196,8 @@ export default {
                 resultParts.push(`${Emojis.CROSS} Failed **${failedCount}** giveaway${failedCount !== 1 ? 's' : ''} (channel/message not found)`);
             }
             const embed = new EmbedBuilder()
-                .setTitle('Giveaway Refresh Complete')
+                .setColor(0x2b2d31)
+            .setTitle('Giveaway Refresh Complete')
                 .setDescription(resultParts.join('\n\n'))
                 .setTimestamp()
                 .setFooter({ text: `Total: ${giveaways.length} giveaways processed` });
@@ -202,7 +207,8 @@ export default {
             return ctx.channel.send({ embeds: [embed] });
         } catch (error) {
             const embed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} Failed to refresh giveaways. Please try again.`)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} Failed to refresh giveaways. Please try again.`)
                 .setTimestamp();
             if (isInteraction) {
                 return ctx.editReply({ embeds: [embed] });

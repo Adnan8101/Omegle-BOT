@@ -14,7 +14,8 @@ export const StickyAdd = async (ctx: Context, args: string[]) => {
     const content = args.join(' ');
     if (!content) {
         const embed = new EmbedBuilder()
-            .setTitle('Missing Argument')
+            .setColor(0x2b2d31)
+        .setTitle('Missing Argument')
             .setDescription('Please provide the content for the sticky message.')
             .addFields({ name: 'Usage', value: '`!sticky add <content>`' });
         await ctx.reply({ embeds: [embed] });
@@ -24,14 +25,16 @@ export const StickyAdd = async (ctx: Context, args: string[]) => {
     try {
         await stickyService.add(ctx, content);
         const embed = new EmbedBuilder()
-            .setTitle('Sticky Message Created')
+            .setColor(0x2b2d31)
+        .setTitle('Sticky Message Created')
             .setDescription(`Successfully created sticky message in <#${ctx.channelId}>.`)
             .addFields({ name: 'Content', value: content.substring(0, 1024) })
             .setTimestamp();
         await ctx.reply({ embeds: [embed] });
     } catch (err: any) {
         const embed = new EmbedBuilder()
-            .setTitle('Error')
+            .setColor(0x2b2d31)
+        .setTitle('Error')
             .setDescription(err.message || 'Failed to create sticky message.');
         await ctx.reply({ embeds: [embed] });
     }

@@ -33,7 +33,8 @@ export const SuggestionConfig: Command = {
         if (action === 'show') {
             if (!config) {
                 const embed = new EmbedBuilder()
-                    .setTitle('Suggestion System')
+                    .setColor(0x2b2d31)
+                .setTitle('Suggestion System')
                     .setDescription('Not configured yet. Use `!suggestionconfig enable` to get started')
                     .setTimestamp();
                 await message.reply({ embeds: [embed] });
@@ -44,7 +45,8 @@ export const SuggestionConfig: Command = {
             const statusText = config.enabled ? 'Enabled' : 'Disabled';
 
             const embed = new EmbedBuilder()
-                .setTitle('Suggestion System')
+                .setColor(0x2b2d31)
+            .setTitle('Suggestion System')
                 .addFields(
                     { name: 'Status', value: `${statusIcon} ${statusText}`, inline: true },
                     { name: 'Channel', value: config.channel_id ? `<#${config.channel_id}>` : 'Not set', inline: true }
@@ -87,7 +89,8 @@ export const SuggestionConfig: Command = {
 
                     // Create new sticky
                     const stickyEmbed = new EmbedBuilder()
-                        .setTitle('Suggestions')
+                        .setColor(0x2b2d31)
+                    .setTitle('Suggestions')
                         .setDescription('Click the button below to submit a suggestion!');
 
                     const button = new ButtonBuilder()
@@ -111,7 +114,8 @@ export const SuggestionConfig: Command = {
             }
 
             const embed = new EmbedBuilder()
-                .setDescription('Suggestion System Enabled\n\nUsers can now submit suggestions using the button in the configured channel.')
+                .setColor(0x2b2d31)
+            .setDescription('Suggestion System Enabled\n\nUsers can now submit suggestions using the button in the configured channel.')
                 .setTimestamp();
 
             await message.reply({ embeds: [embed] });
@@ -130,7 +134,8 @@ export const SuggestionConfig: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setDescription('Suggestion System Disabled')
+                .setColor(0x2b2d31)
+            .setDescription('Suggestion System Disabled')
                 .setTimestamp();
 
             await message.reply({ embeds: [embed] });
@@ -166,7 +171,8 @@ export const SuggestionConfig: Command = {
             }
 
             const embed = new EmbedBuilder()
-                .setDescription(`Channel Set to <#${channelId}>`)
+                .setColor(0x2b2d31)
+            .setDescription(`Channel Set to <#${channelId}>`)
                 .setTimestamp();
 
             await message.reply({ embeds: [embed] });

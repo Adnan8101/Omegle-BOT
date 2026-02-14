@@ -2,8 +2,6 @@ import { Context } from '../../core/context';
 import { autoModService } from '../../services/moderation/AutoModService';
 import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
-import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
 import { ModLogger } from '../../services/logging/ModLogger';
 
 const TICK = '<:tickYes:1469272837192814623>';
@@ -36,7 +34,8 @@ export const BanWord: Command = {
             await autoModService.addWords(ctx.guildId, words, ctx.authorId);
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Banned Words Added**\n\n` +
                     `Added **${words.length}** words: ${words.join(', ')}`
                 );

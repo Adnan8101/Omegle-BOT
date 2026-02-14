@@ -54,7 +54,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
         await reaction.users.remove(user.id);
         try {
             const errorEmbed = new EmbedBuilder()
-                .setTitle(`${Emojis.CROSS} Entry Denied`)
+                .setColor(0x2b2d31)
+            .setTitle(`${Emojis.CROSS} Entry Denied`)
                 .setDescription(`You cannot enter the giveaway for **${giveaway.prize}**\n\n**Reason:** ${result.reason}`)
                 .setTimestamp();
             await user.send({ embeds: [errorEmbed] });
@@ -68,7 +69,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
             const dmChannel = await user.createDM();
             const attachment = new AttachmentBuilder(buffer, { name: 'captcha.png' });
             const captchaEmbed = new EmbedBuilder()
-                .setTitle('🔐 Security Verification')
+                .setColor(0x2b2d31)
+            .setTitle('🔐 Security Verification')
                 .setDescription([
                     `To enter the giveaway for **${giveaway.prize}**, please solve this captcha.`,
                     '',
@@ -94,7 +96,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
                 const response = collected.first()?.content.toUpperCase().trim();
                 if (response !== text) {
                     const failEmbed = new EmbedBuilder()
-                        .setTitle(`${Emojis.CROSS} Incorrect Captcha`)
+                        .setColor(0x2b2d31)
+                    .setTitle(`${Emojis.CROSS} Incorrect Captcha`)
                         .setDescription([
                             '**Your answer was incorrect.**',
                             '',
@@ -107,7 +110,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
                     return;
                 }
                 const successEmbed = new EmbedBuilder()
-                    .setTitle(`${Emojis.TICK} Captcha Verified!`)
+                    .setColor(0x2b2d31)
+                .setTitle(`${Emojis.TICK} Captcha Verified!`)
                     .setDescription([
                         '**You have been successfully entered into the giveaway!**',
                         '',
@@ -119,7 +123,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
                 await dmChannel.send({ embeds: [successEmbed] });
             } catch (timeout) {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle(`${Emojis.CROSS} Captcha Timed Out`)
+                    .setColor(0x2b2d31)
+                .setTitle(`${Emojis.CROSS} Captcha Timed Out`)
                     .setDescription([
                         '**You did not respond in time.**',
                         '',
@@ -212,7 +217,8 @@ async function handleGiveawayReactionAdd(reaction: MessageReaction | PartialMess
                 description += extraInfo.join('\n');
                 description += '\n\n🍀 Good luck!';
                 const entryEmbed = new EmbedBuilder()
-                    .setTitle('Giveaway Entry Confirmed')
+                    .setColor(0x2b2d31)
+                .setTitle('Giveaway Entry Confirmed')
                     .setDescription(description)
                     .setTimestamp();
                 await user.send({ embeds: [entryEmbed] });

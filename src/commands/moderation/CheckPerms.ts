@@ -56,7 +56,8 @@ export const CheckPerms: Command = {
         });
 
         const embed = new EmbedBuilder()
-            .setDescription(`**Permissions Check**\n\n${checks.join('\n')}`);
+            .setColor(0x2b2d31)
+        .setDescription(`**Permissions Check**\n\n${checks.join('\n')}`);
 
         await ctx.reply({ embeds: [embed] });
     }

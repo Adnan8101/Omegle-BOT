@@ -41,7 +41,8 @@ export const Close: Command = {
                 const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
                 const transcriptEmbed = new EmbedBuilder()
                     
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Ticket Closed**\n\n` +
                         `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +
                         `**Closed by:** <@${ctx.authorId}>\n` +

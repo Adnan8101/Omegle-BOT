@@ -19,7 +19,8 @@ export const ModLogSetup: Command = {
         const channelInput = args[0];
         if (!channelInput) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Please provide a channel for mod logs.\n**Usage:** \`modlogsetup #channel\``);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Please provide a channel for mod logs.\n**Usage:** \`modlogsetup #channel\``);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -29,7 +30,8 @@ export const ModLogSetup: Command = {
 
         if (!channel || !channel.isTextBased()) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Invalid channel. Please provide a valid text channel.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Invalid channel. Please provide a valid text channel.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -43,12 +45,14 @@ export const ModLogSetup: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setDescription(`${TICK} Moderation logs will now be sent to <#${channelId}>.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${TICK} Moderation logs will now be sent to <#${channelId}>.`);
             await ctx.reply({ embeds: [embed] });
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed to set log channel: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed to set log channel: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

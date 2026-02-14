@@ -45,7 +45,8 @@ export const Warn: Command = {
             );
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Warned** ${targetUser.username}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`

@@ -13,13 +13,15 @@ export const StickyRemove = async (ctx: Context, args: string[]) => {
     try {
         await stickyService.remove(ctx);
         const embed = new EmbedBuilder()
-            .setTitle('Sticky Message Removed')
+            .setColor(0x2b2d31)
+        .setTitle('Sticky Message Removed')
             .setDescription(`The sticky message for <#${ctx.channelId}> has been deleted.`)
             .setTimestamp();
         await ctx.reply({ embeds: [embed] });
     } catch (err: any) {
         const embed = new EmbedBuilder()
-            .setTitle('Error')
+            .setColor(0x2b2d31)
+        .setTitle('Error')
             .setDescription(err.message || 'Failed to remove sticky message.');
         await ctx.reply({ embeds: [embed] });
     }

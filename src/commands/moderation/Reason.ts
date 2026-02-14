@@ -64,7 +64,8 @@ export const Reason: Command = {
             }
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Case #${result.case_number} Updated**\n\n` +
                     newReason
                 );

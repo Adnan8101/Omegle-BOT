@@ -116,7 +116,8 @@ export const SuggestionManage: Command = {
                 const suggestionNumber = suggestion.id.substring(0, 8);
 
                 const embed = new EmbedBuilder()
-                    .setAuthor({
+                    .setColor(0x2b2d31)
+                .setAuthor({
                         name: author?.user.username || 'Unknown User',
                         iconURL: author?.user.displayAvatarURL() || undefined
                     })

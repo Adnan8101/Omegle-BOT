@@ -36,7 +36,8 @@ export const Unban: Command = {
             await guild.members.unban(targetId, `Unbanned: ${reason} - by ${ctx.authorId}`);
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Unbanned** ${targetUser ? targetUser.tag : targetId}\n` +
                     `**Reason:** ${reason}`
                 );

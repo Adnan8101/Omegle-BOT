@@ -11,7 +11,8 @@ export const ModSafety: Command = {
     permissions: [],
     execute: async (ctx: Context, args: string[]) => {
         const embed1 = new EmbedBuilder()
-            .setTitle('🛡️ Moderation Safety System')
+            .setColor(0x2b2d31)
+        .setTitle('🛡️ Moderation Safety System')
             .setDescription(
                 '**Purpose:** Prevent moderation abuse while allowing legitimate emergency actions.\n\n' +
                 '**Core Principles:**\n' +
@@ -22,7 +23,8 @@ export const ModSafety: Command = {
             );
 
         const embed2 = new EmbedBuilder()
-            .setTitle('📊 How It Works')
+            .setColor(0x2b2d31)
+        .setTitle('📊 How It Works')
             .setDescription(
                 '**Stage 1: Awareness (5 bans in 5 min)**\n' +
                 '🔔 Gentle private alerts sent to moderator and admins\n' +
@@ -34,7 +36,8 @@ export const ModSafety: Command = {
             );
 
         const embed3 = new EmbedBuilder()
-            .setTitle('🎯 Reason-Aware Scoring')
+            .setColor(0x2b2d31)
+        .setTitle('🎯 Reason-Aware Scoring')
             .setDescription(
                 '**Low Risk (0.3x weight):**\n' +
                 'Raid, Scam, Bot attack, Mass spam\n' +
@@ -47,7 +50,8 @@ export const ModSafety: Command = {
             );
 
         const embed4 = new EmbedBuilder()
-            .setTitle('🚨 Emergency Mode')
+            .setColor(0x2b2d31)
+        .setTitle('🚨 Emergency Mode')
             .setDescription(
                 '**Commands:**\n' +
                 '`!emergency on raid [reason]` - Enable\n' +
@@ -61,7 +65,8 @@ export const ModSafety: Command = {
             );
 
         const embed5 = new EmbedBuilder()
-            .setTitle('🔒 Safety Admins')
+            .setColor(0x2b2d31)
+        .setTitle('🔒 Safety Admins')
             .setDescription(
                 '**Commands:**\n' +
                 '`!safetyadmin add @User` - Add safety admin\n' +
@@ -75,7 +80,8 @@ export const ModSafety: Command = {
             );
 
         const embed6 = new EmbedBuilder()
-            .setTitle('✅ Best Practices')
+            .setColor(0x2b2d31)
+        .setTitle('✅ Best Practices')
             .setDescription(
                 '**For Moderators:**\n' +
                 '• Always provide clear ban reasons\n' +

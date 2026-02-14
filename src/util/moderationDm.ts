@@ -37,7 +37,8 @@ export async function sendModDm(
         const prefix = titleMap[action.toLowerCase()] || 'Notice';
 
         const embed = new EmbedBuilder()
-            .setTitle(`${prefix} | ${guild.name}`)
+            .setColor(0x2b2d31)
+        .setTitle(`${prefix} | ${guild.name}`)
             .setDescription(`You have been ${verb} from **${guild.name}**${reason ? `\nReason: ${reason}` : ''}`)
             .setFooter({ text: `Case ID : ${caseId.toString().padStart(4, '0')}` })
             .setTimestamp();

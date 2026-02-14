@@ -19,7 +19,8 @@ export const StaffRole: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -33,7 +34,8 @@ export const StaffRole: Command = {
 
         if (!subcommand || !['add', 'show', 'list', 'remove'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Staff Role Management**\n\n` +
                     '`staffrole add <role>` - Add staff role\n' +
                     '`staffrole show` - List staff roles\n' +
@@ -53,7 +55,8 @@ export const StaffRole: Command = {
 
                 if (staffRoles.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} No staff roles configured.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} No staff roles configured.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -63,7 +66,8 @@ export const StaffRole: Command = {
                     .join(', ');
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Staff Roles**\n\n${roleList}\n\n` +
                         `*Can use: kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av*`
                     );
@@ -75,7 +79,8 @@ export const StaffRole: Command = {
             if (subcommand === 'add') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`staffrole add @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`staffrole add @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -92,7 +97,8 @@ export const StaffRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -100,7 +106,8 @@ export const StaffRole: Command = {
                 const role = await guild.roles.fetch(roleId).catch(() => null);
                 if (!role) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Role not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Role not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -116,7 +123,8 @@ export const StaffRole: Command = {
 
                 if (existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is already a staff role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is already a staff role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -130,7 +138,8 @@ export const StaffRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Staff Role Added**\n\n` +
                         `<@&${roleId}> can now use kick & mute commands.`
                     );
@@ -141,7 +150,8 @@ export const StaffRole: Command = {
             if (subcommand === 'remove') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`staffrole remove @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`staffrole remove @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -158,7 +168,8 @@ export const StaffRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -174,7 +185,8 @@ export const StaffRole: Command = {
 
                 if (!existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is not a staff role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is not a staff role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -189,14 +201,16 @@ export const StaffRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`${TICK} Removed <@&${roleId}> from staff roles.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${TICK} Removed <@&${roleId}> from staff roles.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

@@ -14,14 +14,16 @@ export const StickyList = async (ctx: Context, args: string[]) => {
 
     if (stickies.length === 0) {
         const embed = new EmbedBuilder()
-            .setTitle('No Active Stickies')
+            .setColor(0x2b2d31)
+        .setTitle('No Active Stickies')
             .setDescription('There are no sticky messages configured in this server.');
         await ctx.reply({ embeds: [embed] });
         return;
     }
 
     const embed = new EmbedBuilder()
-        .setTitle('Active Sticky Messages')
+        .setColor(0x2b2d31)
+    .setTitle('Active Sticky Messages')
         .setDescription(`Found **${stickies.length}** sticky message(s) in this server.`)
         .setTimestamp();
 

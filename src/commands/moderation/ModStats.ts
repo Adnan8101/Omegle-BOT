@@ -118,7 +118,8 @@ export const ModStats: Command = {
             const userName = targetUser?.user.tag || targetId;
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **${userName}**${timeLabel ? ` \u2022 Last ${timeLabel}` : ''}\\n\\n` +
                     `Ban: **${timeLabel ? filteredBans : stats.bans || 0}** \u2022 ` +
                     `Kick: **${timeLabel ? filteredKicks : stats.kicks || 0}**\\n` +

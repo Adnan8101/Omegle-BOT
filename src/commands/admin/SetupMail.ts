@@ -32,7 +32,8 @@ export const SetupMail: Command = {
 
         const embed = new EmbedBuilder()
             
-            .setTitle('📨 ModMail Setup Wizard')
+            .setColor(0x2b2d31)
+        .setTitle('📨 ModMail Setup Wizard')
             .setDescription(
                 'Configure the ModMail system using the menus below.\n\n' +
                 '**Required:**\n' +

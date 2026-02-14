@@ -19,7 +19,8 @@ export const ModRole: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -33,7 +34,8 @@ export const ModRole: Command = {
 
         if (!subcommand || !['add', 'show', 'list', 'remove'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Moderator Role Management**\n\n` +
                     '`modrole add <role>` - Add mod role\n' +
                     '`modrole show` - List mod roles\n' +
@@ -53,7 +55,8 @@ export const ModRole: Command = {
 
                 if (modRoles.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} No moderator roles configured.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} No moderator roles configured.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -63,7 +66,8 @@ export const ModRole: Command = {
                     .join(', ');
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Moderator Roles**\n\n${roleList}\n\n` +
                         `*Can use: All standard moderation commands (ban, unban, kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av)*`
                     );
@@ -75,7 +79,8 @@ export const ModRole: Command = {
             if (subcommand === 'add') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`modrole add @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`modrole add @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -93,7 +98,8 @@ export const ModRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -102,7 +108,8 @@ export const ModRole: Command = {
                 const role = await guild.roles.fetch(roleId).catch(() => null);
                 if (!role) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Role not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Role not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -119,7 +126,8 @@ export const ModRole: Command = {
 
                 if (existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is already a moderator role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is already a moderator role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -134,7 +142,8 @@ export const ModRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Moderator Role Added**\n\n` +
                         `<@&${roleId}> can now use all moderation commands.`
                     );
@@ -145,7 +154,8 @@ export const ModRole: Command = {
             if (subcommand === 'remove') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`modrole remove @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`modrole remove @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -163,7 +173,8 @@ export const ModRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -180,7 +191,8 @@ export const ModRole: Command = {
 
                 if (!existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is not a moderator role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is not a moderator role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -196,14 +208,16 @@ export const ModRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`${TICK} Removed <@&${roleId}> from moderator roles.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${TICK} Removed <@&${roleId}> from moderator roles.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

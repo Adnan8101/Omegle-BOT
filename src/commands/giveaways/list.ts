@@ -36,7 +36,8 @@ export default {
             return;
         }
         const embed = new EmbedBuilder()
-            .setTitle(`🎉 Active & Scheduled Giveaways`)
+            .setColor(0x2b2d31)
+        .setTitle(`🎉 Active & Scheduled Giveaways`)
             .setFooter({ text: 'Use /gdelete <ID> to remove' });
         let fieldCount = 0;
         const limitedActive = giveaways.slice(0, 15);

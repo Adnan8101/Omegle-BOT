@@ -41,7 +41,8 @@ export const ModLeaderboard: Command = {
             }).join('\n');
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Mod Leaderboard**\n\n${description}`
                 );
 

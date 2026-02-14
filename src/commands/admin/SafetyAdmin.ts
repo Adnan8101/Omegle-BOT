@@ -27,7 +27,8 @@ export const SafetyAdmin: Command = {
 
         if (!subcommand || !['add', 'list', 'remove'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Safety Admin Management**\n\n` +
                     '`safetyadmin add <user>` - Add safety admin\n' +
                     '`safetyadmin list` - List safety admins\n' +
@@ -46,7 +47,8 @@ export const SafetyAdmin: Command = {
 
                 if (safetyAdmins.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} No safety admins configured.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} No safety admins configured.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -56,7 +58,8 @@ export const SafetyAdmin: Command = {
                     .join(', ');
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Safety Admins**\n\n${adminList}\n\n` +
                         `*These users bypass all moderation safety checks*`
                     );
@@ -68,7 +71,8 @@ export const SafetyAdmin: Command = {
             if (subcommand === 'add') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a user.\n**Usage:** \`safetyadmin add @User\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a user.\n**Usage:** \`safetyadmin add @User\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -85,7 +89,8 @@ export const SafetyAdmin: Command = {
 
                 if (!userId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid user format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid user format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -93,7 +98,8 @@ export const SafetyAdmin: Command = {
                 const user = await guild.members.fetch(userId).catch(() => null);
                 if (!user) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} User not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} User not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -109,7 +115,8 @@ export const SafetyAdmin: Command = {
 
                 if (existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@${userId}> is already a safety admin.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@${userId}> is already a safety admin.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -123,7 +130,8 @@ export const SafetyAdmin: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Safety Admin Added**\n\n` +
                         `<@${userId}> now bypasses all moderation safety checks.`
                     );
@@ -134,7 +142,8 @@ export const SafetyAdmin: Command = {
             if (subcommand === 'remove') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a user.\n**Usage:** \`safetyadmin remove @User\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a user.\n**Usage:** \`safetyadmin remove @User\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -151,7 +160,8 @@ export const SafetyAdmin: Command = {
 
                 if (!userId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid user format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid user format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -167,7 +177,8 @@ export const SafetyAdmin: Command = {
 
                 if (!existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@${userId}> is not a safety admin.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@${userId}> is not a safety admin.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -182,14 +193,16 @@ export const SafetyAdmin: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`${TICK} Removed <@${userId}> from safety admins.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${TICK} Removed <@${userId}> from safety admins.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

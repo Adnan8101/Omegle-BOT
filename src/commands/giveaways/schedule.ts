@@ -132,7 +132,8 @@ export default {
         const command = message.client.application.commands.cache.find((c: any) => c.name === 'gschedule');
         const commandId = command ? command.id : '0';
         const embed = new EmbedBuilder()
-            .setDescription(`${Emojis.CROSS} The \`!gschedule\` command has been moved to slash commands only.\n\nPlease use </gschedule:${commandId}> instead!`);
+            .setColor(0x2b2d31)
+        .setDescription(`${Emojis.CROSS} The \`!gschedule\` command has been moved to slash commands only.\n\nPlease use </gschedule:${commandId}> instead!`);
         await message.reply({ embeds: [embed] });
     },
     async run(ctx: any, channel: TextChannel, timeStr: string, timezone: string, winners: number, prize: string, durationStr: string, opts: any) {
@@ -181,7 +182,8 @@ export default {
     },
     async handleAnnouncementInput(ctx: ChatInputCommandInteraction, channel: TextChannel, timeStr: string, timezone: string, startTimeMs: number, winners: number, prize: string, durationMs: number, opts: any) {
         const promptEmbed = new EmbedBuilder()
-            .setTitle('📢 Add Giveaway Announcement')
+            .setColor(0x2b2d31)
+        .setTitle('📢 Add Giveaway Announcement')
             .setDescription([
                 'Please send your announcement message below.',
                 '',
@@ -217,14 +219,16 @@ export default {
         const result = await Promise.race([buttonPromise, messagePromise]);
         if (!result) {
             const timeoutEmbed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
             return await ctx.editReply({ embeds: [timeoutEmbed], components: [] });
         }
         if (result instanceof Map) {
             const collected = result;
             if (collected.size === 0) {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
+                    .setColor(0x2b2d31)
+                .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
                 return await ctx.editReply({ embeds: [timeoutEmbed], components: [] });
             }
         } else {
@@ -253,7 +257,8 @@ export default {
         const announcementMedia = userMessage.attachments.first()?.url || null;
         await userMessage.delete().catch(() => { });
         const previewEmbed = new EmbedBuilder()
-            .setTitle('👀 Announcement Preview')
+            .setColor(0x2b2d31)
+        .setTitle('👀 Announcement Preview')
             .setDescription(announcementText || '*No text*')
             .setFooter({ text: 'This will be posted when the giveaway starts' });
         if (announcementMedia) {
@@ -307,12 +312,14 @@ export default {
                 await this.handleAnnouncementInput(ctx, channel, timeStr, timezone, startTimeMs, winners, prize, durationMs, opts);
             } else {
                 const cancelEmbed = new EmbedBuilder()
-                    .setDescription(`${Emojis.CROSS} Giveaway scheduling cancelled.`)
+                    .setColor(0x2b2d31)
+                .setDescription(`${Emojis.CROSS} Giveaway scheduling cancelled.`)
                 await selection.update({ embeds: [cancelEmbed], components: [] });
             }
         } catch (e) {
             const timeoutEmbed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} Timed out. Giveaway not scheduled.`)
             await ctx.editReply({ embeds: [timeoutEmbed], components: [] });
         }
     },
@@ -338,7 +345,8 @@ export default {
             });
             const timestamp = Math.floor(startTimeMs / 1000);
             const successEmbed = new EmbedBuilder()
-                .setTitle(`${Emojis.TICK} Giveaway Scheduled!`)
+                .setColor(0x2b2d31)
+            .setTitle(`${Emojis.TICK} Giveaway Scheduled!`)
                 .setDescription([
                     `**Prize:** ${prize}`,
                     `**Winners:** ${winners}`,

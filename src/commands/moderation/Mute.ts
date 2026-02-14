@@ -75,7 +75,8 @@ export const Mute: Command = {
                     `${(durationSeconds / 3600).toFixed(1)}h`;
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Muted** ${targetUser.username}\n` +
                     `**Duration:** ${durationDisplay}\n` +
                     `**Reason:** ${reason}\n` +

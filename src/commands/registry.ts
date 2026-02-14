@@ -60,6 +60,9 @@ import { SuggestionReset } from './admin/SuggestionReset';
 import { SuggestionManage } from './moderation/SuggestionManage';
 import { SuggestionAction } from './moderation/SuggestionAction';
 import { ModCooldown } from './admin/ModCooldown';
+import { Manuals } from './moderation/Manuals';
+import { EditManual } from './moderation/EditManual';
+import { ManualLogsChannel } from './admin/ManualLogsChannel';
 
 // Sticky subcommands
 import { StickyAdd } from './sticky/StickyAdd';
@@ -144,6 +147,13 @@ export const CommandRegistry: Record<string, Command> = {
     'suggestion': SuggestionAction,
     'suggestion_action': SuggestionAction,
     'cooldown': ModCooldown,
+
+    // Manual System
+    'manuals': Manuals,
+    'edit-manual': EditManual,
+    'editmanual': EditManual,
+    'manual-logs-channel': ManualLogsChannel,
+    'manuallogschannel': ManualLogsChannel,
 
     // Sticky Commands (Main + Subcommands for Help display)
     'sticky': StickyCommand,

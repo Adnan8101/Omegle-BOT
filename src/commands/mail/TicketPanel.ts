@@ -15,7 +15,8 @@ export const TicketPanel: Command = {
         const title = args.length > 0 ? args.join(' ') : 'Create a Ticket';
 
         const embed = new EmbedBuilder()
-            .setTitle(title)
+            .setColor(0x2b2d31)
+        .setTitle(title)
             .setDescription('Click the button below to contact support.')
             .setFooter({ text: ctx.inner.guild.name, iconURL: ctx.inner.guild.iconURL() || undefined });
 

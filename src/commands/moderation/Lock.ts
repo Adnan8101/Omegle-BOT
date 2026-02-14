@@ -1,7 +1,6 @@
 import { Context } from '../../core/context';
 import { EmbedBuilder, PermissionFlagsBits, TextChannel, User } from 'discord.js';
 import { Command } from '../../core/command';
-import { canPerformAction } from '../../util/rolePermissions';
 import { ModLogger } from '../../services/logging/ModLogger';
 
 const TICK = '<:tickYes:1469272837192814623>';
@@ -32,7 +31,8 @@ export const Lock: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setDescription(`🔒 ${TICK} **Locked** ${channel}`);
+                .setColor(0x2b2d31)
+            .setDescription(`🔒 ${TICK} **Locked** ${channel}`);
 
             await ctx.reply({ embeds: [embed] });
 

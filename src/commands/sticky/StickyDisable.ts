@@ -13,13 +13,15 @@ export const StickyDisable = async (ctx: Context, args: string[]) => {
     try {
         await stickyService.toggle(ctx, false);
         const embed = new EmbedBuilder()
-            .setTitle('Sticky Message Disabled')
+            .setColor(0x2b2d31)
+        .setTitle('Sticky Message Disabled')
             .setDescription(`Sticky message in <#${ctx.channelId}> has been **disabled**.`)
             .setTimestamp();
         await ctx.reply({ embeds: [embed] });
     } catch (err: any) {
         const embed = new EmbedBuilder()
-            .setTitle('Error')
+            .setColor(0x2b2d31)
+        .setTitle('Error')
             .setDescription(err.message || 'Failed to disable sticky message.');
         await ctx.reply({ embeds: [embed] });
     }

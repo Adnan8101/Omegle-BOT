@@ -34,7 +34,8 @@ export default {
         const target = args[0]?.toLowerCase();
         if (!target || !['all', 'id'].includes(target)) {
             const embed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} **Invalid Usage**\n\`\`\`!grefresh <all|id> [messageId]\`\`\``)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} **Invalid Usage**\n\`\`\`!grefresh <all|id> [messageId]\`\`\``)
                 .setTimestamp();
             return message.channel.send({ embeds: [embed] });
         }
@@ -60,7 +61,8 @@ export default {
                 });
                 if (giveaways.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} No active giveaways found in this server.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} No active giveaways found in this server.`)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
@@ -88,7 +90,8 @@ export default {
                     }
                 }
                 const resultEmbed = new EmbedBuilder()
-                    .setDescription(`${Emojis.TICK} Successfully refreshed **${refreshedCount}** giveaway(s).${failedCount > 0 ? `\n⚠️ Failed to refresh **${failedCount}** giveaway(s).` : ''}`)
+                    .setColor(0x2b2d31)
+                .setDescription(`${Emojis.TICK} Successfully refreshed **${refreshedCount}** giveaway(s).${failedCount > 0 ? `\n⚠️ Failed to refresh **${failedCount}** giveaway(s).` : ''}`)
                     .setTimestamp();
                 if (isInteraction) {
                     return ctx.editReply({ embeds: [resultEmbed] });
@@ -97,7 +100,8 @@ export default {
             } else if (target === 'id') {
                 if (!messageId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} Please provide a message ID when using \`id\` target.\n\`\`\`!grefresh id <messageId>\`\`\``)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} Please provide a message ID when using \`id\` target.\n\`\`\`!grefresh id <messageId>\`\`\``)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
@@ -109,7 +113,8 @@ export default {
                 });
                 if (!giveaway) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} No giveaway found with that message ID.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} No giveaway found with that message ID.`)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
@@ -118,7 +123,8 @@ export default {
                 }
                 if (giveaway.guildId !== guildId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} That giveaway is not from this server.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} That giveaway is not from this server.`)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
@@ -137,7 +143,8 @@ export default {
                     const embed = createGiveawayEmbed(giveaway, participantCount);
                     await message.edit({ embeds: [embed] });
                     const successEmbed = new EmbedBuilder()
-                        .setDescription(`${Emojis.TICK} Successfully refreshed giveaway **${giveaway.prize}**\n[Jump to Message](https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId})`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.TICK} Successfully refreshed giveaway **${giveaway.prize}**\n[Jump to Message](https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId})`)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [successEmbed] });
@@ -145,7 +152,8 @@ export default {
                     return ctx.channel.send({ embeds: [successEmbed] });
                 } catch (error) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${Emojis.CROSS} Failed to refresh giveaway. The message may have been deleted.`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`${Emojis.CROSS} Failed to refresh giveaway. The message may have been deleted.`)
                         .setTimestamp();
                     if (isInteraction) {
                         return ctx.editReply({ embeds: [embed] });
@@ -155,7 +163,8 @@ export default {
             }
         } catch (error) {
             const embed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} An error occurred while refreshing giveaways.`)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} An error occurred while refreshing giveaways.`)
                 .setTimestamp();
             if (isInteraction) {
                 return ctx.editReply({ embeds: [embed] });

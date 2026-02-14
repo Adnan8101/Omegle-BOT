@@ -39,7 +39,8 @@ export const Help = async (ctx: Context, args: string[]) => {
             `**Example**\n\`!${cmd.example}\``;
 
         const embed = new EmbedBuilder()
-            .setTitle(`Help: ${cmd.name.charAt(0).toUpperCase() + cmd.name.slice(1)}`)
+            .setColor(0x2b2d31)
+        .setTitle(`Help: ${cmd.name.charAt(0).toUpperCase() + cmd.name.slice(1)}`)
             .setDescription(details)
             .setFooter({ text: 'Use !help for all commands' });
 
@@ -49,7 +50,8 @@ export const Help = async (ctx: Context, args: string[]) => {
 
     // List all commands in organized format
     const embed = new EmbedBuilder()
-        .setTitle('📚 Available Commands')
+        .setColor(0x2b2d31)
+    .setTitle('📚 Available Commands')
         .setDescription('Here are all available commands:')
         .setFooter({ text: 'Use !help <command> for detailed information about a specific command.' });
 

@@ -138,7 +138,8 @@ export class StickyService {
             const { EmbedBuilder } = require('discord.js');
             const embed = new EmbedBuilder()
                 
-                .setDescription(content)
+                .setColor(0x2b2d31)
+            .setDescription(content)
                 .setFooter({ text: 'Sticky Message' })
                 .setTimestamp();
 

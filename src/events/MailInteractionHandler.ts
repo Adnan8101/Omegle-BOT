@@ -5,6 +5,8 @@ import { db } from '../data/db';
 import { TranscriptGenerator } from '../services/mail/TranscriptGenerator';
 import { modService } from '../services/moderation/ModerationService';
 import { activityLogService } from '../services/logging/ActivityLogService';
+import { manualService } from '../services/manual/ManualService';
+import { EMBED_COLOR } from '../util/embedColors';
 
 const TICK = '<:tickYes:1469272837192814623>';
 
@@ -37,7 +39,7 @@ async function buildTicketEmbed(
 
     // ── Warn / Manual / Mute counts (matching !whois) ──
     const warnCount = modLogs.filter((l: any) => l.action === 'warn').length;
-    const manualCount = modLogs.filter((l: any) => l.action === 'mute' && !l.active).length;
+    const manualCount = await manualService.getManualCount(guild.id, userId);
     const activeMute = modLogs.find((l: any) => l.action === 'mute' && l.active);
     const totalCases = modLogs.length;
 
@@ -77,7 +79,8 @@ async function buildTicketEmbed(
 
     const embed = new EmbedBuilder()
         
-        .setAuthor({
+        .setColor(0x2b2d31)
+    .setAuthor({
             name: `${user?.username || 'Unknown'} | Ticket #${displayId}`,
             iconURL: user?.displayAvatarURL() || undefined
         })
@@ -110,6 +113,18 @@ async function buildTicketEmbed(
             return `<#${log.channel_id}> • <t:${joined}:R> • ${dur}`;
         }).join('\n');
         embed.addFields({ name: '🔊 Recent VC Activity', value: vcLines, inline: false });
+    }
+
+    // ── Manuals Summary ──
+    if (manualCount > 0) {
+        const recentManuals = await manualService.getUserManualsPaginated(guild.id, userId, 1, 3);
+        const manualLines = recentManuals.manuals.map((m: any) => {
+            const ts = Math.floor(new Date(m.created_at).getTime() / 1000);
+            return `\`#${m.manual_number}\` **${m.offense}** • ${m.action} • <t:${ts}:R>`;
+        }).join('\n');
+        embed.addFields({ name: `📝 Manuals (${Math.min(recentManuals.total, 3)}/${recentManuals.total})`, value: manualLines, inline: false });
+    } else {
+        embed.addFields({ name: '📝 Manuals', value: 'No manuals', inline: false });
     }
 
     return { embed, recentAction };
@@ -183,7 +198,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             const config = await mailService.getGuildConfig(guildId);
             const { embed: controlEmbed, recentAction } = await buildTicketEmbed(guild, userId, displayId, catConfig.name, config?.staff_message);
 
-            // Buttons — Whois removed, only Claim/Close + ModLogs/VCLogs
+            // Buttons — Claim/Close + ModLogs/VCLogs + Manuals/Add Manual
             const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder().setCustomId(`mail_claim_${ticket.ticket_id}`).setLabel('Claim').setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder().setCustomId(`mail_close_${ticket.ticket_id}`).setLabel('Close').setStyle(ButtonStyle.Secondary)
@@ -194,6 +209,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary)
             );
 
+            const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder().setCustomId(`mail_manuals_${userId}`).setLabel('Manuals').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_addmanual_${userId}`).setLabel('Add Manual').setStyle(ButtonStyle.Secondary)
+            );
+
             let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
             if (recentAction) {
                 channelContent += `\n⚠️ <@${recentAction.moderator_id}> — user had a recent **${recentAction.action}** action.`;
@@ -202,7 +222,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             await channel.send({
                 content: channelContent,
                 embeds: [controlEmbed],
-                components: [row1, row2]
+                components: [row1, row2, row3]
             });
 
             await interaction.editReply({ content: `Ticket created! You can now send messages here.`, components: [] });
@@ -274,6 +294,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 new ButtonBuilder().setCustomId(`mail_vclogs_${userId}`).setLabel('VC Logs').setStyle(ButtonStyle.Secondary)
             );
 
+            const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder().setCustomId(`mail_manuals_${userId}`).setLabel('Manuals').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId(`mail_addmanual_${userId}`).setLabel('Add Manual').setStyle(ButtonStyle.Secondary)
+            );
+
             let channelContent = `${catConfig.staff_role_ids.map((r: string) => `<@&${r}>`).join(' ')}`;
             if (recentAction) {
                 channelContent += `\n⚠️ <@${recentAction.moderator_id}> — user had a recent **${recentAction.action}** action.`;
@@ -282,7 +307,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             await channel.send({
                 content: channelContent,
                 embeds: [controlEmbed],
-                components: [row1, row2]
+                components: [row1, row2, row3]
             });
 
             await interaction.editReply({ content: `Ticket created! You can now send messages here.`, components: [] });
@@ -338,7 +363,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 const targetUser = await client.users.fetch(ticket.user_id).catch(() => null);
                 const transcriptEmbed = new EmbedBuilder()
                     
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Ticket Closed**\n\n` +
                         `**User:** ${targetUser ? `${targetUser.username} (\`${ticket.user_id}\`)` : ticket.user_id}\n` +
                         `**Closed by:** <@${interaction.user.id}>\n` +
@@ -449,7 +475,8 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
             const embed = new EmbedBuilder()
                 
-                .setAuthor({ name: `VC Logs | ${targetUser?.username || targetId}`, iconURL: targetUser?.displayAvatarURL() })
+                .setColor(0x2b2d31)
+            .setAuthor({ name: `VC Logs | ${targetUser?.username || targetId}`, iconURL: targetUser?.displayAvatarURL() })
                 .setDescription(lines.join('\n'))
                 .setFooter({ text: `Showing last ${logs.length} sessions` })
                 .setTimestamp();

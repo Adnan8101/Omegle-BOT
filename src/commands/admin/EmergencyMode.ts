@@ -27,7 +27,8 @@ export const EmergencyMode: Command = {
 
         if (!action || !['on', 'off', 'status'].includes(action)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Emergency Mode Management**\n\n` +
                     '`emergency on <type> [reason]` - Enable emergency mode\n' +
                     '`emergency off` - Disable emergency mode\n' +
@@ -47,7 +48,8 @@ export const EmergencyMode: Command = {
 
                 if (!emergency || !emergency.enabled) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${TICK} Emergency mode is **disabled**`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${TICK} Emergency mode is **disabled**`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -56,7 +58,8 @@ export const EmergencyMode: Command = {
                 const enabledAt = `<t:${Math.floor(emergency.enabled_at.getTime() / 1000)}:R>`;
 
                 const embed = new EmbedBuilder()
-                    .setTitle('🚨 Emergency Mode Active')
+                    .setColor(0x2b2d31)
+                .setTitle('🚨 Emergency Mode Active')
                     .setDescription(
                         `**Type:** ${emergency.mode_type || 'general'}\n` +
                         `**Enabled by:** ${enabledBy}\n` +
@@ -98,7 +101,8 @@ export const EmergencyMode: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setTitle('🚨 Emergency Mode Enabled')
+                    .setColor(0x2b2d31)
+                .setTitle('🚨 Emergency Mode Enabled')
                     .setDescription(
                         `**Type:** ${modeType}\n` +
                         `**Reason:** ${reason}\n\n` +
@@ -122,7 +126,8 @@ export const EmergencyMode: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Emergency Mode Disabled**\n\n` +
                         `Safety checks and cooldowns have been restored.`
                     );
@@ -132,7 +137,8 @@ export const EmergencyMode: Command = {
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

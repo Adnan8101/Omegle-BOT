@@ -68,7 +68,8 @@ export default {
             const end = start + ITEMS_PER_PAGE;
             const pageGiveaways = giveaways.slice(start, end);
             const embed = new EmbedBuilder()
-                .setTitle('Giveaway History')
+                .setColor(0x2b2d31)
+            .setTitle('Giveaway History')
                 .setFooter({ text: `Page ${page + 1} of ${totalPages} | Total Giveaways: ${giveaways.length}` })
                 .setTimestamp();
             for (const gw of pageGiveaways) {

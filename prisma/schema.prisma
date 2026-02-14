@@ -520,3 +520,45 @@ model ModConfig {
   
   @@map("mod_config")
 }
+
+// =====================================
+// MANUAL SYSTEM MODELS
+// =====================================
+
+model Manual {
+  id            String   @id @default(uuid())
+  manual_number Int
+  guild_id      String
+  target_id     String
+  moderator_id  String
+  offense       String
+  action        String
+  advise        String?
+  note_proof    String?
+  log_message_id String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([guild_id, target_id])
+  @@index([guild_id, manual_number])
+  @@index([guild_id, moderator_id])
+  @@map("manuals")
+}
+
+model ManualCounter {
+  guild_id          String @id
+  last_manual_number Int   @default(0)
+
+  @@map("manual_counters")
+}
+
+model ManualConfig {
+  guild_id       String @id
+  log_channel_id String?
+
+  @@map("manual_config")
+}
+
+// =====================================
+// END MANUAL SYSTEM MODELS
+// =====================================

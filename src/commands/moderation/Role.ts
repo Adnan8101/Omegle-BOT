@@ -22,7 +22,8 @@ export const RoleCommand: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -30,14 +31,16 @@ export const RoleCommand: Command = {
         // Check bot permissions
         if (!guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles)) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} I need the **Manage Roles** permission to do this.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} I need the **Manage Roles** permission to do this.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
 
         if (args.length < 2) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} **Usage:** \`!role <member> <role>\`\n**Example:** \`!role @User Moderator\``);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} **Usage:** \`!role <member> <role>\`\n**Example:** \`!role @User Moderator\``);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -67,7 +70,8 @@ export const RoleCommand: Command = {
 
         if (!targetMember) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Could not find member: **${memberInput}**`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Could not find member: **${memberInput}**`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -109,7 +113,8 @@ export const RoleCommand: Command = {
 
             if (!fuzzyMatch) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`${CROSS} Could not find role: **${roleInput}**`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${CROSS} Could not find role: **${roleInput}**`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -124,7 +129,8 @@ export const RoleCommand: Command = {
             // If similarity is less than 100%, ask for confirmation
             if (fuzzyMatch.similarity < 0.95) {
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `⚠️ **Role Confirmation**\n\n` +
                         `Did you mean to ${actionText} <@&${targetRole.id}> ${preposition} ${targetMember.user}?\n\n` +
                         `**You typed:** \`${roleInput}\`\n` +
@@ -169,13 +175,15 @@ export const RoleCommand: Command = {
 
                             // Update the message to show processing
                             const processingEmbed = new EmbedBuilder()
-                                .setDescription('⏳ Processing role assignment...');
+                                .setColor(0x2b2d31)
+                            .setDescription('⏳ Processing role assignment...');
                             await interaction.editReply({ embeds: [processingEmbed], components: [] });
 
                             // Execute the role action
                             if (!targetRole) {
                                 const errorEmbed = new EmbedBuilder()
-                                    .setDescription(`${CROSS} Role not found.`);
+                                    .setColor(0x2b2d31)
+                                .setDescription(`${CROSS} Role not found.`);
                                 await interaction.editReply({ embeds: [errorEmbed], components: [] });
                                 return;
                             }
@@ -192,7 +200,8 @@ export const RoleCommand: Command = {
                             collector.stop('cancelled');
 
                             const cancelEmbed = new EmbedBuilder()
-                                .setDescription(`${CROSS} Role assignment cancelled.`);
+                                .setColor(0x2b2d31)
+                            .setDescription(`${CROSS} Role assignment cancelled.`);
                             await interaction.editReply({ embeds: [cancelEmbed], components: [] });
                         }
                     });
@@ -200,7 +209,8 @@ export const RoleCommand: Command = {
                     collector.on('end', async (_collected: any, reason: string) => {
                         if (reason === 'time') {
                             const timeoutEmbed = new EmbedBuilder()
-                                .setDescription('⏱️ Role confirmation timed out.');
+                                .setColor(0x2b2d31)
+                            .setDescription('⏱️ Role confirmation timed out.');
 
                             try {
                                 await response.edit({ embeds: [timeoutEmbed], components: [] });
@@ -228,7 +238,8 @@ async function addRoleToMemberWithMessage(interaction: ButtonInteraction, member
 
     if (member.roles.cache.has(role.id)) {
         const embed = new EmbedBuilder()
-            .setDescription(`⚠️ ${member.user} already has the <@&${role.id}> role.`);
+            .setColor(0x2b2d31)
+        .setDescription(`⚠️ ${member.user} already has the <@&${role.id}> role.`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -236,7 +247,8 @@ async function addRoleToMemberWithMessage(interaction: ButtonInteraction, member
     const authorHighestRole = authorMember.roles.highest;
     if (role.position >= authorHighestRole.position && guild.ownerId !== authorMember.id) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} You cannot give a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} You cannot give a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -244,7 +256,8 @@ async function addRoleToMemberWithMessage(interaction: ButtonInteraction, member
     const botHighestRole = guild.members.me!.roles.highest;
     if (role.position >= botHighestRole.position) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} I cannot give a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} I cannot give a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -252,14 +265,16 @@ async function addRoleToMemberWithMessage(interaction: ButtonInteraction, member
     try {
         await member.roles.add(role);
         const embed = new EmbedBuilder()
-            .setDescription(`${TICK} **Added** <@&${role.id}> to ${member.user}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${TICK} **Added** <@&${role.id}> to ${member.user}`);
         await interaction.editReply({ embeds: [embed] });
 
         // Log action
         await ModLogger.log(guild, authorMember.user as User, member.user, 'Role', 'Role Added via Button', { role: role.toString() });
     } catch (error: any) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} Failed to add role: ${error.message}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} Failed to add role: ${error.message}`);
         await interaction.editReply({ embeds: [embed] });
     }
 }
@@ -270,7 +285,8 @@ async function removeRoleFromMemberWithMessage(interaction: ButtonInteraction, m
 
     if (!member.roles.cache.has(role.id)) {
         const embed = new EmbedBuilder()
-            .setDescription(`⚠️ ${member.user} doesn't have the <@&${role.id}> role.`);
+            .setColor(0x2b2d31)
+        .setDescription(`⚠️ ${member.user} doesn't have the <@&${role.id}> role.`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -278,7 +294,8 @@ async function removeRoleFromMemberWithMessage(interaction: ButtonInteraction, m
     const authorHighestRole = authorMember.roles.highest;
     if (role.position >= authorHighestRole.position && guild.ownerId !== authorMember.id) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} You cannot remove a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} You cannot remove a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -286,7 +303,8 @@ async function removeRoleFromMemberWithMessage(interaction: ButtonInteraction, m
     const botHighestRole = guild.members.me!.roles.highest;
     if (role.position >= botHighestRole.position) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} I cannot remove a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} I cannot remove a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
         await interaction.editReply({ embeds: [embed] });
         return;
     }
@@ -294,14 +312,16 @@ async function removeRoleFromMemberWithMessage(interaction: ButtonInteraction, m
     try {
         await member.roles.remove(role);
         const embed = new EmbedBuilder()
-            .setDescription(`${TICK} **Removed** <@&${role.id}> from ${member.user}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${TICK} **Removed** <@&${role.id}> from ${member.user}`);
         await interaction.editReply({ embeds: [embed] });
 
         // Log action
         await ModLogger.log(guild, authorMember.user as User, member.user, 'Role', 'Role Removed via Button', { role: role.toString() });
     } catch (error: any) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} Failed to remove role: ${error.message}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} Failed to remove role: ${error.message}`);
         await interaction.editReply({ embeds: [embed] });
     }
 }
@@ -313,7 +333,8 @@ async function addRoleToMember(ctx: Context, member: GuildMember, role: Role) {
     // Check if member already has the role
     if (member.roles.cache.has(role.id)) {
         const embed = new EmbedBuilder()
-            .setDescription(`⚠️ ${member.user} already has the <@&${role.id}> role.`);
+            .setColor(0x2b2d31)
+        .setDescription(`⚠️ ${member.user} already has the <@&${role.id}> role.`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -323,7 +344,8 @@ async function addRoleToMember(ctx: Context, member: GuildMember, role: Role) {
 
     if (role.position >= authorHighestRole.position && guild.ownerId !== authorMember.id) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} You cannot give a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} You cannot give a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -332,7 +354,8 @@ async function addRoleToMember(ctx: Context, member: GuildMember, role: Role) {
     const botHighestRole = guild.members.me!.roles.highest;
     if (role.position >= botHighestRole.position) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} I cannot give a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} I cannot give a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -341,7 +364,8 @@ async function addRoleToMember(ctx: Context, member: GuildMember, role: Role) {
         await member.roles.add(role);
 
         const embed = new EmbedBuilder()
-            .setDescription(`${TICK} **Added** <@&${role.id}> to ${member.user}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${TICK} **Added** <@&${role.id}> to ${member.user}`);
 
         await ctx.reply({ embeds: [embed] });
 
@@ -349,7 +373,8 @@ async function addRoleToMember(ctx: Context, member: GuildMember, role: Role) {
         await ModLogger.log(guild, authorMember.user as User, member.user, 'Role', 'Role Added', { role: role.toString() });
     } catch (error: any) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} Failed to add role: ${error.message}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} Failed to add role: ${error.message}`);
         await ctx.reply({ embeds: [embed] });
     }
 }
@@ -361,7 +386,8 @@ async function removeRoleFromMember(ctx: Context, member: GuildMember, role: Rol
     // Check if member has the role
     if (!member.roles.cache.has(role.id)) {
         const embed = new EmbedBuilder()
-            .setDescription(`⚠️ ${member.user} doesn't have the <@&${role.id}> role.`);
+            .setColor(0x2b2d31)
+        .setDescription(`⚠️ ${member.user} doesn't have the <@&${role.id}> role.`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -371,7 +397,8 @@ async function removeRoleFromMember(ctx: Context, member: GuildMember, role: Rol
 
     if (role.position >= authorHighestRole.position && guild.ownerId !== authorMember.id) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} You cannot remove a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} You cannot remove a role higher than or equal to your highest role.\n**Your highest role:** <@&${authorHighestRole.id}>`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -380,7 +407,8 @@ async function removeRoleFromMember(ctx: Context, member: GuildMember, role: Rol
     const botHighestRole = guild.members.me!.roles.highest;
     if (role.position >= botHighestRole.position) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} I cannot remove a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} I cannot remove a role higher than or equal to my highest role.\n**My highest role:** <@&${botHighestRole.id}>`);
         await ctx.reply({ embeds: [embed] });
         return;
     }
@@ -389,7 +417,8 @@ async function removeRoleFromMember(ctx: Context, member: GuildMember, role: Rol
         await member.roles.remove(role);
 
         const embed = new EmbedBuilder()
-            .setDescription(`${TICK} **Removed** <@&${role.id}> from ${member.user}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${TICK} **Removed** <@&${role.id}> from ${member.user}`);
 
         await ctx.reply({ embeds: [embed] });
 
@@ -397,7 +426,8 @@ async function removeRoleFromMember(ctx: Context, member: GuildMember, role: Rol
         await ModLogger.log(guild, authorMember.user as User, member.user, 'Role', 'Role Removed', { role: role.toString() });
     } catch (error: any) {
         const embed = new EmbedBuilder()
-            .setDescription(`${CROSS} Failed to remove role: ${error.message}`);
+            .setColor(0x2b2d31)
+        .setDescription(`${CROSS} Failed to remove role: ${error.message}`);
         await ctx.reply({ embeds: [embed] });
     }
 }

@@ -25,7 +25,8 @@ export default {
         }
         if (args.length < 1) {
             const embed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} **Usage:** \`!dummy <message_id>\``)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} **Usage:** \`!dummy <message_id>\``)
             return message.channel.send({ embeds: [embed] });
         }
         await this.run(message, args[0]);
@@ -41,7 +42,8 @@ export default {
             });
             if (!giveaway) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`${Emojis.CROSS} Giveaway not found with that message ID.`)
+                    .setColor(0x2b2d31)
+                .setDescription(`${Emojis.CROSS} Giveaway not found with that message ID.`)
                 if (isInteraction) {
                     return ctx.editReply({ embeds: [embed] });
                 }
@@ -97,7 +99,8 @@ export default {
                         .setURL(`https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId}`)
                 );
             const previewInfo = new EmbedBuilder()
-                .setTitle('🎭 Dummy Giveaway Preview')
+                .setColor(0x2b2d31)
+            .setTitle('🎭 Dummy Giveaway Preview')
                 .setDescription(
                     `**This is a preview of how your giveaway will look when it ends.**\n\n` +
                     `${Emojis.TICK} Giveaway Status: ${giveaway.ended ? '**Ended**' : '**Active**'}\n` +
@@ -136,7 +139,8 @@ export default {
         } catch (error) {
             console.error('Dummy preview error:', error);
             const embed = new EmbedBuilder()
-                .setDescription(`${Emojis.CROSS} Failed to generate preview. Please check the message ID.`)
+                .setColor(0x2b2d31)
+            .setDescription(`${Emojis.CROSS} Failed to generate preview. Please check the message ID.`)
             if (isInteraction) {
                 return ctx.editReply({ embeds: [embed] });
             }

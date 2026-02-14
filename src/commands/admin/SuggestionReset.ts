@@ -28,7 +28,8 @@ export const SuggestionReset: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setTitle('✅ Suggestions Reset')
+                .setColor(0x2b2d31)
+            .setTitle('✅ Suggestions Reset')
                 .setDescription(`All suggestions have been cleared and the counter has been reset.`)
                 .addFields(
                     { name: 'Deleted', value: `${deletedCount.count} suggestion(s)`, inline: true }

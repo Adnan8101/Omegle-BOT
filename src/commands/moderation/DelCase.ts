@@ -2,8 +2,6 @@ import { Context } from '../../core/context';
 import { modService } from '../../services/moderation/ModerationService';
 import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
-import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
 import { sendModDm } from '../../util/moderationDm';
 import { ModLogger } from '../../services/logging/ModLogger';
 
@@ -45,7 +43,8 @@ export const DelCase: Command = {
             }
 
             const embed = new EmbedBuilder()
-                .setDescription(`${TICK} **Case #${caseNum} Deleted**\n\nCase pardoned`);
+                .setColor(0x2b2d31)
+            .setDescription(`${TICK} **Case #${caseNum} Deleted**\n\nCase pardoned`);
 
             await ctx.reply({ embeds: [embed] });
 

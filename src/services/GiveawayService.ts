@@ -156,7 +156,8 @@ export class GiveawayService {
                         hostName = hostUser.username;
                     } catch { }
                     const winnerEmbed = new EmbedBuilder()
-                        .setDescription(`<:fo_gift:1465936534346924046> **${giveaway.prize}** <:fo_gift:1465936534346924046> \n\n**Winner${winners.length > 1 ? 's' : ''}:** ${mentions}\n\nCongratulations \n > **Contact the giveaway host and claim your price!**`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`<:fo_gift:1465936534346924046> **${giveaway.prize}** <:fo_gift:1465936534346924046> \n\n**Winner${winners.length > 1 ? 's' : ''}:** ${mentions}\n\nCongratulations \n > **Contact the giveaway host and claim your price!**`)
                         .setFooter({ text: `Hosted by ${hostName}` })
                         .setTimestamp();
                     await channel.send({
@@ -195,7 +196,8 @@ export class GiveawayService {
                     hostName = hostUser.username;
                 } catch { }
                 const rerollEmbed = new EmbedBuilder()
-                    .setDescription(`<a:Giveaway:1469356628565557413> **${giveaway.prize}** (Reroll)\n\n**New Winner:** <@${winner[0]}>\n\nCongratulations!`)
+                    .setColor(0x2b2d31)
+                .setDescription(`<a:Giveaway:1469356628565557413> **${giveaway.prize}** (Reroll)\n\n**New Winner:** <@${winner[0]}>\n\nCongratulations!`)
                     .setFooter({ text: `Hosted by ${hostName}` })
                     .setTimestamp();
                 await channel.send({

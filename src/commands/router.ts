@@ -24,12 +24,14 @@ export type CommandHandler = (ctx: Context, args: string[]) => Promise<void>;
 const moderationCommands = ['ban', 'kick', 'mute', 'unmute', 'warn', 'unban', 'reason',
     'delcase', 'modleaderboard', 'modlogs', 'modstats', 'whois', 'caseinfo',
     'av', 'banword', 'checkperms', 'dm', 'lock', 'unlock', 'hide', 'unhide',
-    'move', 'mv', 'role', 'inrole', 'ad', 'autodrag', 'suggestion'];
+    'move', 'mv', 'role', 'inrole', 'ad', 'autodrag', 'suggestion',
+    'manuals', 'edit-manual', 'editmanual'];
 const afkCommands = ['afk', 'afkclear', 'afklist', 'afksettings'];
 const mailCommands = ['openmail', 'close', 'claim', 'unclaim', 'ticketpanel',
     'claimedtickets', 'inactivemails', 'ticketclear'];
 const adminCommands = ['setupmail', 'deletesetup', 'cc', 'modrole', 'staffrole', 'srmodrole',
-    'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig', 'modlogsetup'];
+    'modsafety', 'safetyadmin', 'emergency', 'suggestionconfig', 'modlogsetup',
+    'manual-logs-channel', 'manuallogschannel'];
 const utilityCommands = ['vclogs', 'clogs', 'wv', 'help'];
 const giveawayCommandNames = ['gcreate', 'gstart', 'gend', 'greroll', 'gcancel',
     'gdelete', 'glist', 'ghistory', 'grefresh', 'gresume', 'gstop', 'gschedule'];

@@ -13,7 +13,8 @@ export const StickyCooldown = async (ctx: Context, args: string[]) => {
     const seconds = parseInt(args[0]);
     if (isNaN(seconds)) {
         const embed = new EmbedBuilder()
-            .setTitle('Invalid Input')
+            .setColor(0x2b2d31)
+        .setTitle('Invalid Input')
             .setDescription('Please provide a valid number of seconds.')
             .addFields({ name: 'Usage', value: '`!sticky cooldown <seconds>`' });
         await ctx.reply({ embeds: [embed] });
@@ -23,13 +24,15 @@ export const StickyCooldown = async (ctx: Context, args: string[]) => {
     try {
         await stickyService.setCooldown(ctx, seconds);
         const embed = new EmbedBuilder()
-            .setTitle('Cooldown Updated')
+            .setColor(0x2b2d31)
+        .setTitle('Cooldown Updated')
             .setDescription(`Sticky message cooldown for <#${ctx.channelId}> set to **${seconds} seconds**.`)
             .setTimestamp();
         await ctx.reply({ embeds: [embed] });
     } catch (err: any) {
         const embed = new EmbedBuilder()
-            .setTitle('Error')
+            .setColor(0x2b2d31)
+        .setTitle('Error')
             .setDescription(err.message || 'Failed to set cooldown.');
         await ctx.reply({ embeds: [embed] });
     }

@@ -4,7 +4,6 @@ import { modService } from '../../services/moderation/ModerationService';
 import { banAbuseService } from '../../services/moderation/BanAbuseService';
 import { EmbedBuilder, User, PermissionFlagsBits } from 'discord.js';
 import { Command } from '../../core/command';
-import { canPerformAction } from '../../util/rolePermissions';
 import { ModLogger } from '../../services/logging/ModLogger';
 
 const TICK = '<:tickYes:1469272837192814623>';
@@ -26,7 +25,8 @@ export const Ban: Command = {
         const cooldownUntil = await banAbuseService.isOnCooldown(ctx.guildId, ctx.authorId);
         if (cooldownUntil) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${CROSS} **Ban Cooldown Active**\n\n` +
                     `You are on a 10-minute ban cooldown.\n` +
                     `Ends: <t:${Math.floor(cooldownUntil.getTime() / 1000)}:R>`
@@ -57,7 +57,8 @@ export const Ban: Command = {
 
             if (trackResult.blocked) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`⚠️ ${trackResult.message}`);
+                    .setColor(0x2b2d31)
+                .setDescription(`⚠️ ${trackResult.message}`);
                 await ctx.reply({ embeds: [embed], ephemeral: true });
                 return;
             }
@@ -74,7 +75,8 @@ export const Ban: Command = {
             );
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Banned** ${targetUser.username}\n` +
                     `**Reason:** ${reason}\n` +
                     `**Case:** #${caseId.toString().padStart(4, '0')}`

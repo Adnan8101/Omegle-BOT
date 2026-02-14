@@ -222,7 +222,8 @@ export class BanAbuseService {
         // Alert to moderator
         if (moderator) {
             const modEmbed = new EmbedBuilder()
-                .setTitle('🔔 Safety Check')
+                .setColor(0x2b2d31)
+            .setTitle('🔔 Safety Check')
                 .setDescription(
                     `You've been performing many bans quickly.\n\n` +
                     `This is just a safety check — no action taken.\n` +
@@ -270,7 +271,8 @@ export class BanAbuseService {
         const moderator = await guild.members.fetch(moderatorId).catch(() => null);
         if (moderator) {
             const modEmbed = new EmbedBuilder()
-                .setTitle('⚠️ Temporary Safety Pause')
+                .setColor(0x2b2d31)
+            .setTitle('⚠️ Temporary Safety Pause')
                 .setDescription(
                     `Ban command temporarily paused for safety review.\n\n` +
                     `**This is not a punishment** and will auto-restore in 10 minutes.\n\n` +
@@ -320,7 +322,8 @@ export class BanAbuseService {
               `Review the pattern below. You can enable Emergency Mode if this is legitimate.`;
 
         const embed = new EmbedBuilder()
-            .setTitle(title)
+            .setColor(0x2b2d31)
+        .setTitle(title)
             .setDescription(description)
             .addFields({
                 name: 'Recent Bans',

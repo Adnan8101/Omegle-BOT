@@ -34,7 +34,8 @@ export const AfkClear: Command = {
         try {
             await afkService.removeAfk(ctx.guildId, targetUser.id);
             const embed = new EmbedBuilder()
-                .setDescription(`Cleared AFK status for <@${targetUser.id}>.`);
+                .setColor(0x2b2d31)
+            .setDescription(`Cleared AFK status for <@${targetUser.id}>.`);
             await ctx.reply({ embeds: [embed] });
         } catch (err: any) {
             await ctx.reply({ content: `Failed to clear AFK: ${err.message}`, ephemeral: true });

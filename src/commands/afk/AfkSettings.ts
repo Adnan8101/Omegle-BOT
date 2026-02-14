@@ -27,7 +27,8 @@ export const AfkSettings: Command = {
 
         const getEmbed = (s: typeof settings) => {
             return new EmbedBuilder()
-                .setTitle('AFK Configuration')
+                .setColor(0x2b2d31)
+            .setTitle('AFK Configuration')
                 .setDescription(
                     `**System Status:** ${s.enabled ? '<:tickYes:1469272837192814623> Enabled' : '<:cross:1469273232929456314> Disabled'}\n\n` +
                     '**Configuration Rules:**\n' +

@@ -48,7 +48,8 @@ export function createGiveawayEmbed(g: Giveaway, participantCount: number): Embe
     }
     description += `\n\nReact with ${g.emoji} to enter!`;
     const embed = new EmbedBuilder()
-        .setTitle(g.prize)
+        .setColor(0x2b2d31)
+    .setTitle(g.prize)
         .setDescription(description)
         .setFooter({ text: 'All the Best!' });
     if (g.thumbnail) {
@@ -76,12 +77,14 @@ export function giveawayEndedEmbed(g: Giveaway, winners: string[], participantCo
         `${dotEmoji} Winner${winners.length > 1 ? 's' : ''}: ${winnerText}`
     ].join('\n');
     return new EmbedBuilder()
-        .setDescription(description)
+        .setColor(0x2b2d31)
+    .setDescription(description)
         .setTimestamp();
 }
 export function giveawayCancelledEmbed(g: Giveaway): EmbedBuilder {
     return new EmbedBuilder()
-        .setTitle("Giveaway Cancelled")
+        .setColor(0x2b2d31)
+    .setTitle("Giveaway Cancelled")
         .setDescription(`**Prize:** ${g.prize}\n\nThis giveaway was cancelled by a host.`)
         .setFooter({ text: "Cancelled" });
 }

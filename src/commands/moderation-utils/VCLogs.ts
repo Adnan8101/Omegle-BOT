@@ -62,7 +62,8 @@ export const VCLogs: Command = {
 
                 if (!comparison.interactions || comparison.interactions.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setTitle(`VC Logs | ${user1.username} & ${user2.username}`)
+                        .setColor(0x2b2d31)
+                    .setTitle(`VC Logs | ${user1.username} & ${user2.username}`)
                         .setDescription('No mutual voice activity found in the last 30 days.')
                         .setFooter({ text: `Requested by : ${ctx.inner.member.user.username}` });
                     await ctx.reply({ embeds: [embed] });
@@ -95,7 +96,8 @@ export const VCLogs: Command = {
                 else totalStr = `${totalMins}m`;
 
                 const embed = new EmbedBuilder()
-                    .setTitle(`VC Logs | ${user1.username} & ${user2.username}`)
+                    .setColor(0x2b2d31)
+                .setTitle(`VC Logs | ${user1.username} & ${user2.username}`)
                     .setDescription(
                         `**Mutual VC Time:** ${totalStr}\n\n` +
                         lines.join('\n')
@@ -113,7 +115,8 @@ export const VCLogs: Command = {
 
             if (!logs || logs.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setTitle(`VC Logs | ${targetUser.username}`)
+                    .setColor(0x2b2d31)
+                .setTitle(`VC Logs | ${targetUser.username}`)
                     .setDescription('No voice activity found.')
                     .setFooter({ text: `Requested by : ${ctx.inner.member.user.username}` });
                 await ctx.reply({ embeds: [embed] });
@@ -140,7 +143,8 @@ export const VCLogs: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setTitle(`VC Logs | ${targetUser.username}`)
+                .setColor(0x2b2d31)
+            .setTitle(`VC Logs | ${targetUser.username}`)
                 .setDescription(lines.join('\n'))
                 .setFooter({ text: `Showing last ${logs.length} sessions | Requested by : ${ctx.inner.member.user.username}` })
                 .setTimestamp();

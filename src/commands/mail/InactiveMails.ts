@@ -33,7 +33,8 @@ export const InactiveMails: Command = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle(`Inactive Tickets (> ${durationStr})`)
+            .setColor(0x2b2d31)
+        .setTitle(`Inactive Tickets (> ${durationStr})`)
             .setDescription(tickets.slice(0, 20).map(t => `• <#${t.channel_id}> (User: <@${t.user_id}>)`).join('\n'));
 
         if (tickets.length > 20) {

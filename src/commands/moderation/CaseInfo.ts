@@ -47,7 +47,8 @@ export const CaseInfo: Command = {
                 : 'N/A';
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `**Case #${caseData.case_number}** • ${caseData.action}\n\n` +
                     `**Target:** <@${caseData.target_id}>\n` +
                     `**Mod:** <@${caseData.moderator_id}>\n` +

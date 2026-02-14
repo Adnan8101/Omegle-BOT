@@ -151,7 +151,14 @@ export const modlogsetupCommand = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addChannelOption(opt => opt.setName('channel').setDescription('Channel for moderation logs').setRequired(true));
 
+export const manualLogChannelCommand = new SlashCommandBuilder()
+    .setName('manual-logs-channel')
+    .setDescription('Set the channel for manual logs (webhook)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addChannelOption(opt => opt.setName('channel').setDescription('Channel for manual logs').setRequired(true));
+
 export const adminCommands = [
     setupmailCommand, deletesetupCommand, ccCommand, modroleCommand, 
-    staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand, modlogsetupCommand
+    staffroleCommand, srmodroleCommand, wvAllowedRoleCommand, modsafetyCommand, safetyadminCommand, emergencyCommand, suggestionconfigCommand, modlogsetupCommand,
+    manualLogChannelCommand
 ];

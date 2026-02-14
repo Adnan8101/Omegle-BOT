@@ -23,7 +23,8 @@ export const Hide: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Server only`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Server only`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -50,7 +51,8 @@ export const Hide: Command = {
 
         if (!targetChannel) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Channel not found`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Channel not found`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -61,14 +63,16 @@ export const Hide: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setDescription(`👁️ ${TICK} **Hidden** ${targetChannel}`);
+                .setColor(0x2b2d31)
+            .setDescription(`👁️ ${TICK} **Hidden** ${targetChannel}`);
             await ctx.reply({ embeds: [embed] });
 
             // Log action
             await ModLogger.log(guild, member.user as User, targetChannel.toString(), 'Hide', null, { channel: targetChannel.toString() });
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

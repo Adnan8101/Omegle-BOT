@@ -5,7 +5,8 @@ import { Command } from '../../core/command';
 
 // Helper to handle temporary reply
 async function replyWarning(ctx: Context, content: string) {
-    const embed = new EmbedBuilder().setDescription(content);
+    const embed = new EmbedBuilder()
+        .setColor(0x2b2d31).setDescription(content);
 
     // Delete user message if possible (Context usually wraps Message)
     if (ctx.inner instanceof Message && ctx.inner.deletable) {

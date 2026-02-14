@@ -25,7 +25,8 @@ export const AfkList: Command = {
             }).join('\n');
 
             const embed = new EmbedBuilder()
-                .setTitle(`AFK Users (${afkUsers.length})`)
+                .setColor(0x2b2d31)
+            .setTitle(`AFK Users (${afkUsers.length})`)
                 .setDescription(description.substring(0, 4000));
 
             await ctx.reply({ embeds: [embed] });

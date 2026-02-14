@@ -2,8 +2,6 @@ import { Context } from '../../core/context';
 import { Resolver } from '../../util/Resolver';
 import { EmbedBuilder, PermissionFlagsBits, User } from 'discord.js';
 import { Command } from '../../core/command';
-import { hasPermission } from '../../util/permissions';
-import { hasModRole } from '../../util/modRole';
 import { ModLogger } from '../../services/logging/ModLogger';
 
 const TICK = '<:tickYes:1469272837192814623>';
@@ -39,7 +37,8 @@ export const Dm: Command = {
             await targetUser.send(`**Message from ${ctx.inner.guild?.name}:**\n${messageContent}`);
 
             const embed = new EmbedBuilder()
-                .setDescription(`${TICK} **DM Sent**\n\nSent to **${targetUser.username}**`);
+                .setColor(0x2b2d31)
+            .setDescription(`${TICK} **DM Sent**\n\nSent to **${targetUser.username}**`);
 
             await ctx.reply({ embeds: [embed] });
 
@@ -47,7 +46,8 @@ export const Dm: Command = {
             await ModLogger.log(ctx.inner.guild!, ctx.inner.member.user as User, targetUser, 'DM', messageContent);
         } catch (err: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} **DM Failed**\n\nFailed to DM **${targetUser.username}**. DMs might be closed.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} **DM Failed**\n\nFailed to DM **${targetUser.username}**. DMs might be closed.`);
             await ctx.reply({ embeds: [embed] });
         }
     }

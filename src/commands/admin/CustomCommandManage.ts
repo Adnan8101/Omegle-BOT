@@ -16,7 +16,8 @@ export const CustomCommandManage: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription('<:cross:1469273232929456314> This command can only be used in a server.');
+                .setColor(0x2b2d31)
+            .setDescription('<:cross:1469273232929456314> This command can only be used in a server.');
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -31,7 +32,8 @@ export const CustomCommandManage: Command = {
 
         if (!subcommand || !['add', 'remove', 'show', 'list'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setTitle('Custom Command Management')
+                .setColor(0x2b2d31)
+            .setTitle('Custom Command Management')
                 .setDescription('<:cross:1469273232929456314> **Usage:**')
                 .addFields(
                     { name: 'Add Command', value: '`!cc add <name> <role>`', inline: false },
@@ -51,7 +53,8 @@ export const CustomCommandManage: Command = {
 
             if (customCommands.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setDescription('⚠️ No custom commands configured for this server.');
+                    .setColor(0x2b2d31)
+                .setDescription('⚠️ No custom commands configured for this server.');
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -62,7 +65,8 @@ export const CustomCommandManage: Command = {
             }).join('\n');
 
             const embed = new EmbedBuilder()
-                .setTitle('📋 Custom Commands')
+                .setColor(0x2b2d31)
+            .setTitle('📋 Custom Commands')
                 .setDescription(commandList)
                 .setFooter({ text: `Total: ${customCommands.length} custom command${customCommands.length === 1 ? '' : 's'}` })
                 .setTimestamp();
@@ -75,7 +79,8 @@ export const CustomCommandManage: Command = {
         if (subcommand === 'add') {
             if (args.length < 3) {
                 const embed = new EmbedBuilder()
-                    .setDescription('<:cross:1469273232929456314> **Usage:** `!cc add <name> <role>`\n**Example:** `!cc add vip @VIP`');
+                    .setColor(0x2b2d31)
+                .setDescription('<:cross:1469273232929456314> **Usage:** `!cc add <name> <role>`\n**Example:** `!cc add vip @VIP`');
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -86,7 +91,8 @@ export const CustomCommandManage: Command = {
             // Validate command name (alphanumeric only, no spaces)
             if (!/^[a-z0-9_-]+$/.test(commandName)) {
                 const embed = new EmbedBuilder()
-                    .setDescription('<:cross:1469273232929456314> Command name must be alphanumeric (letters, numbers, -, _) with no spaces.');
+                    .setColor(0x2b2d31)
+                .setDescription('<:cross:1469273232929456314> Command name must be alphanumeric (letters, numbers, -, _) with no spaces.');
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -95,7 +101,8 @@ export const CustomCommandManage: Command = {
             const reservedNames = ['cc', 'help', 'ban', 'kick', 'mute', 'warn', 'role', 'inrole', 'sticky', 'afk', 'setup'];
             if (reservedNames.includes(commandName)) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:cross:1469273232929456314> The name **${commandName}** is reserved and cannot be used.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`<:cross:1469273232929456314> The name **${commandName}** is reserved and cannot be used.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -114,7 +121,8 @@ export const CustomCommandManage: Command = {
 
             if (!roleId) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:cross:1469273232929456314> Could not find role: **${roleInput}**`);
+                    .setColor(0x2b2d31)
+                .setDescription(`<:cross:1469273232929456314> Could not find role: **${roleInput}**`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -122,7 +130,8 @@ export const CustomCommandManage: Command = {
             const role = guild.roles.cache.get(roleId);
             if (!role) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:cross:1469273232929456314> Invalid role ID: **${roleId}**`);
+                    .setColor(0x2b2d31)
+                .setDescription(`<:cross:1469273232929456314> Invalid role ID: **${roleId}**`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -155,7 +164,8 @@ export const CustomCommandManage: Command = {
                     });
 
                     const embed = new EmbedBuilder()
-                        .setDescription(`<:tickYes:1469272837192814623> Updated custom command **${commandName}** → <@&${roleId}>`)
+                        .setColor(0x2b2d31)
+                    .setDescription(`<:tickYes:1469272837192814623> Updated custom command **${commandName}** → <@&${roleId}>`)
                         .setTimestamp();
                     await ctx.reply({ embeds: [embed] });
                 } else {
@@ -170,7 +180,8 @@ export const CustomCommandManage: Command = {
                     });
 
                     const embed = new EmbedBuilder()
-                        .setTitle('<:tickYes:1469272837192814623> Custom Command Created')
+                        .setColor(0x2b2d31)
+                    .setTitle('<:tickYes:1469272837192814623> Custom Command Created')
                         .setDescription(`Created **${commandName}** → <@&${roleId}>`)
                         .addFields({
                             name: 'Usage',
@@ -181,7 +192,8 @@ export const CustomCommandManage: Command = {
                 }
             } catch (error: any) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:cross:1469273232929456314> Failed to create custom command: ${error.message}`);
+                    .setColor(0x2b2d31)
+                .setDescription(`<:cross:1469273232929456314> Failed to create custom command: ${error.message}`);
                 await ctx.reply({ embeds: [embed] });
             }
             return;
@@ -191,7 +203,8 @@ export const CustomCommandManage: Command = {
         if (subcommand === 'remove') {
             if (args.length < 2) {
                 const embed = new EmbedBuilder()
-                    .setDescription('<:cross:1469273232929456314> **Usage:** `!cc remove <name>`\n**Example:** `!cc remove vip`');
+                    .setColor(0x2b2d31)
+                .setDescription('<:cross:1469273232929456314> **Usage:** `!cc remove <name>`\n**Example:** `!cc remove vip`');
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
@@ -208,18 +221,21 @@ export const CustomCommandManage: Command = {
 
                 if (deleted.count === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`⚠️ Custom command **${commandName}** not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`⚠️ Custom command **${commandName}** not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:tickYes:1469272837192814623> Removed custom command **${commandName}**`)
+                    .setColor(0x2b2d31)
+                .setDescription(`<:tickYes:1469272837192814623> Removed custom command **${commandName}**`)
                     .setTimestamp();
                 await ctx.reply({ embeds: [embed] });
             } catch (error: any) {
                 const embed = new EmbedBuilder()
-                    .setDescription(`<:cross:1469273232929456314> Failed to remove custom command: ${error.message}`);
+                    .setColor(0x2b2d31)
+                .setDescription(`<:cross:1469273232929456314> Failed to remove custom command: ${error.message}`);
                 await ctx.reply({ embeds: [embed] });
             }
             return;

@@ -67,7 +67,8 @@ export const CLogs: Command = {
 
             if (!comparison.interactions || comparison.interactions.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setTitle(`VC Comparison | ${user1.username} & ${user2.username}`)
+                    .setColor(0x2b2d31)
+                .setTitle(`VC Comparison | ${user1.username} & ${user2.username}`)
                     .setDescription(`No voice channel interactions found in the last ${timeInput}.`)
                     .setFooter({ text: `Requested by : ${ctx.inner.member.user.username}` })
                     .setTimestamp();
@@ -104,7 +105,8 @@ export const CLogs: Command = {
             else totalTimeStr = `${totalSecs}s`;
 
             const embed = new EmbedBuilder()
-                .setTitle(`VC Comparison | ${user1.username} & ${user2.username}`)
+                .setColor(0x2b2d31)
+            .setTitle(`VC Comparison | ${user1.username} & ${user2.username}`)
                 .setDescription(`Found **${comparison.interactions.length}** interactions in the last ${timeInput}`)
                 .addFields(
                     { name: 'Total Time Together', value: `**${totalTimeStr}**`, inline: true },

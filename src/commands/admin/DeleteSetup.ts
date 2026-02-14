@@ -63,7 +63,8 @@ export const DeleteSetup: Command = {
             });
 
             const embed = new EmbedBuilder()
-                .setTitle('ModMail Setup Deleted')
+                .setColor(0x2b2d31)
+            .setTitle('ModMail Setup Deleted')
                 .setDescription(`Removed configuration and deleted **${deletedCount}** channels.`);
 
             await ctx.reply({ embeds: [embed] });

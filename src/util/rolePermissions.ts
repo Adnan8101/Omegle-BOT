@@ -8,6 +8,8 @@ export type ModAction =
     | 'ban' | 'kick' | 'mute' | 'unmute' | 'warn' | 'unban' | 'purge' | 'clear'
     | 'lock' | 'unlock' | 'hide' | 'unhide' | 'move' | 'ad' | 'autodrag'
     | 'reason' | 'modlogs' | 'whois' | 'av'
+    // Manual system
+    | 'manual' | 'manuals' | 'edit-manual'
     // Exclusive Sr Mod actions
     | 'caseinfo' | 'delcase' | 'banword' | 'checkperms' | 'dm' 
     | 'modleaderboard' | 'modstats' | 'role' | 'inrole' 
@@ -25,6 +27,8 @@ const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
         'ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
         'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
         'reason', 'modlogs', 'whois', 'av',
+        // Manual system
+        'manual', 'manuals', 'edit-manual',
         // Exclusive commands
         'caseinfo', 'delcase', 'banword', 'checkperms', 'dm',
         'modleaderboard', 'modstats', 'role', 'inrole',
@@ -33,12 +37,16 @@ const ROLE_PERMISSIONS: Record<RoleType, ModAction[]> = {
     mod: [
         'ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
         'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
-        'reason', 'modlogs', 'whois', 'av'
+        'reason', 'modlogs', 'whois', 'av',
+        // Manual system
+        'manual', 'manuals', 'edit-manual'
     ],
     staff: [
         'kick', 'mute', 'unmute', 'warn', 'purge', 'clear',
         'lock', 'unlock', 'hide', 'unhide', 'move', 'ad', 'autodrag',
-        'reason', 'modlogs', 'whois', 'av'
+        'reason', 'modlogs', 'whois', 'av',
+        // Manual system
+        'manual', 'manuals', 'edit-manual'
     ]
 };
 

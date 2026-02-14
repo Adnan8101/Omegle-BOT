@@ -5,6 +5,8 @@ import { Command } from '../../core/command';
 import { hasPermission } from '../../util/permissions';
 import { hasModRole } from '../../util/modRole';
 import { modService } from '../../services/moderation/ModerationService';
+import { manualService } from '../../services/manual/ManualService';
+import { EMBED_COLOR } from '../../util/embedColors';
 
 const TICK = '<:tickYes:1469272837192814623>';
 const CROSS = '<:cross:1469273232929456314>';
@@ -53,7 +55,9 @@ export const Whois: Command = {
         // Get moderation stats
         const logs = await modService.getLogs(ctx.guildId, targetUser.id);
         const warnCount = logs?.filter(l => l.action === 'warn').length || 0;
-        const manualCount = logs?.filter(l => l.action === 'mute' && !l.active).length || 0;
+
+        // Get manual count from the manual system
+        const manualCount = await manualService.getManualCount(ctx.guildId, targetUser.id);
 
         // Check for active timeout/mute
         const activeMute = logs?.find(l => l.action === 'mute' && l.active);
@@ -66,7 +70,8 @@ export const Whois: Command = {
         }
 
         const embed = new EmbedBuilder()
-            .setThumbnail(targetUser.displayAvatarURL())
+            .setColor(0x2b2d31)
+        .setThumbnail(targetUser.displayAvatarURL())
             .setDescription(
                 `${TICK} **${targetUser.username}**\n\n` +
                 `@${targetUser.username}\n\n` +
@@ -102,9 +107,9 @@ export const Whois: Command = {
 
         const message = await ctx.reply({ embeds: [embed], components: [row] });
 
-        // Handle modlogs button
+        // Handle modlogs button — manuals & addmanual are handled by ManualInteractionHandler
         const collector = message.createMessageComponentCollector({
-            filter: (i: any) => i.customId.startsWith('whois_') && i.customId.endsWith(`_${ctx.authorId}`),
+            filter: (i: any) => (i.customId.startsWith('whois_modlogs_') || i.customId.startsWith('whois_back_')) && i.customId.endsWith(`_${ctx.authorId}`),
             time: 300000 // 5 minutes
         });
 
@@ -117,7 +122,8 @@ export const Whois: Command = {
 
                     if (!logs || logs.length === 0) {
                         const modlogsEmbed = new EmbedBuilder()
-                            .setDescription(
+                            .setColor(0x2b2d31)
+                        .setDescription(
                                 `${TICK} **${targetUser.username}**\n\n` +
                                 `Clean record • No history`
                             );
@@ -150,7 +156,8 @@ export const Whois: Command = {
                     const allCaseIds = logs.map(l => `#${l.case_number}`).join(', ');
 
                     const modlogsEmbed = new EmbedBuilder()
-                        .setDescription(
+                        .setColor(0x2b2d31)
+                    .setDescription(
                             `${TICK} **${targetUser.username}**\n\n` +
                             `**Status:** ${status} • **Cases:** ${logs.length}\n` +
                             `**Case IDs:** ${allCaseIds}\n\n` +
@@ -166,20 +173,6 @@ export const Whois: Command = {
                         );
 
                     await interaction.update({ embeds: [modlogsEmbed], components: [backRow] });
-
-                } else if (interaction.customId.startsWith('whois_manuals_')) {
-                    // Under development
-                    await interaction.reply({ 
-                        content: '⚠️ This feature is currently under development.', 
-                        ephemeral: true 
-                    });
-
-                } else if (interaction.customId.startsWith('whois_addmanual_')) {
-                    // Under development
-                    await interaction.reply({ 
-                        content: '⚠️ This feature is currently under development.', 
-                        ephemeral: true 
-                    });
 
                 } else if (interaction.customId.startsWith('whois_back_')) {
                     // Show original whois

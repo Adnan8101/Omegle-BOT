@@ -47,7 +47,8 @@ export const ModLogs: Command = {
 
             if (!logs || logs.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **${targetUser.username}**\n\n` +
                         `Clean record • No history`
                     );
@@ -72,7 +73,8 @@ export const ModLogs: Command = {
             const allCaseIds = logs.map(l => `#${l.case_number}`).join(', ');
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **${targetUser.username}**\n\n` +
                     `**Status:** ${status} • **Cases:** ${logs.length}\n` +
                     `**Case IDs:** ${allCaseIds}\n\n` +

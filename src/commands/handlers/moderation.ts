@@ -79,6 +79,10 @@ export async function handleModerationCommand(interaction: ChatInputCommandInter
         if (action) args.push(action);
         if (response) args.push(response);
     }
+    else if (cmd === 'edit-manual') {
+        const id = interaction.options.getInteger('id');
+        if (id) args.push(id.toString());
+    }
 
     return CommandExecutor.execute(command.execute, interaction, args);
 }

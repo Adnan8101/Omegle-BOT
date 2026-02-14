@@ -127,7 +127,8 @@ export const SuggestionAction: Command = {
                 else if (dbStatus === 'implemented') title += ' | Implemented';
 
                 const embed = new EmbedBuilder()
-                    .setAuthor({
+                    .setColor(0x2b2d31)
+                .setAuthor({
                         name: author?.user.username || 'Unknown User',
                         iconURL: author?.user.displayAvatarURL() || undefined
                     })

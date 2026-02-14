@@ -45,7 +45,8 @@ export const Unmute: Command = {
             await member.timeout(null, `Unmuted: ${reason} - by ${ctx.authorId}`);
 
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Unmuted** ${targetUser.username}\n` +
                     `**Reason:** ${reason}`
                 );

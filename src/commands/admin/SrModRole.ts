@@ -19,7 +19,8 @@ export const SrModRole: Command = {
 
         if (!guild || !member) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -33,7 +34,8 @@ export const SrModRole: Command = {
 
         if (!subcommand || !['add', 'show', 'list', 'remove'].includes(subcommand)) {
             const embed = new EmbedBuilder()
-                .setDescription(
+                .setColor(0x2b2d31)
+            .setDescription(
                     `${TICK} **Senior Moderator Role Management**\n\n` +
                     '`srmodrole add <role>` - Add senior mod role\n' +
                     '`srmodrole show` - List senior mod roles\n' +
@@ -53,7 +55,8 @@ export const SrModRole: Command = {
 
                 if (srModRoles.length === 0) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} No senior moderator roles configured.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} No senior moderator roles configured.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -63,7 +66,8 @@ export const SrModRole: Command = {
                     .join(', ');
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Senior Moderator Roles**\n\n${roleList}\n\n` +
                         `*Full access to all moderation commands including exclusive commands:*\n` +
                         `*Standard: ban, unban, kick, warn, mute, unmute, purge, lock, unlock, hide, unhide, move, ad, reason, modlogs, whois, av*\n` +
@@ -77,7 +81,8 @@ export const SrModRole: Command = {
             if (subcommand === 'add') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`srmodrole add @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`srmodrole add @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -95,7 +100,8 @@ export const SrModRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -104,7 +110,8 @@ export const SrModRole: Command = {
                 const role = await guild.roles.fetch(roleId).catch(() => null);
                 if (!role) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Role not found.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Role not found.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -121,7 +128,8 @@ export const SrModRole: Command = {
 
                 if (existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is already a senior moderator role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is already a senior moderator role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -136,7 +144,8 @@ export const SrModRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(
+                    .setColor(0x2b2d31)
+                .setDescription(
                         `${TICK} **Senior Moderator Role Added**\n\n` +
                         `<@&${roleId}> can now use **all** moderation commands.`
                     );
@@ -147,7 +156,8 @@ export const SrModRole: Command = {
             if (subcommand === 'remove') {
                 if (!args[1]) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`srmodrole remove @Role\``);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Please provide a role.\n**Usage:** \`srmodrole remove @Role\``);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -165,7 +175,8 @@ export const SrModRole: Command = {
 
                 if (!roleId) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} Invalid role format.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} Invalid role format.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -182,7 +193,8 @@ export const SrModRole: Command = {
 
                 if (!existing) {
                     const embed = new EmbedBuilder()
-                        .setDescription(`${CROSS} <@&${roleId}> is not a senior moderator role.`);
+                        .setColor(0x2b2d31)
+                    .setDescription(`${CROSS} <@&${roleId}> is not a senior moderator role.`);
                     await ctx.reply({ embeds: [embed] });
                     return;
                 }
@@ -198,14 +210,16 @@ export const SrModRole: Command = {
                 });
 
                 const embed = new EmbedBuilder()
-                    .setDescription(`${TICK} Removed <@&${roleId}> from senior moderator roles.`);
+                    .setColor(0x2b2d31)
+                .setDescription(`${TICK} Removed <@&${roleId}> from senior moderator roles.`);
                 await ctx.reply({ embeds: [embed] });
                 return;
             }
 
         } catch (error: any) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Failed: ${error.message}`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Failed: ${error.message}`);
             await ctx.reply({ embeds: [embed] });
         }
     }

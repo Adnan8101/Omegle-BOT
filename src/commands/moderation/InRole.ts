@@ -18,14 +18,16 @@ export const InRole: Command = {
 
         if (!guild) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} This command can only be used in a server.`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} This command can only be used in a server.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
 
         if (args.length === 0) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} **Usage:** \`!inrole <role>\`\n**Example:** \`!inrole Moderator\``);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} **Usage:** \`!inrole <role>\`\n**Example:** \`!inrole Moderator\``);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -48,7 +50,8 @@ export const InRole: Command = {
 
         if (!targetRole) {
             const embed = new EmbedBuilder()
-                .setDescription(`${CROSS} Could not find role: **${roleInput}**`);
+                .setColor(0x2b2d31)
+            .setDescription(`${CROSS} Could not find role: **${roleInput}**`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -60,7 +63,8 @@ export const InRole: Command = {
 
         if (membersWithRole.size === 0) {
             const embed = new EmbedBuilder()
-                .setDescription(`⚠️ No members have the <@&${targetRole.id}> role.`);
+                .setColor(0x2b2d31)
+            .setDescription(`⚠️ No members have the <@&${targetRole.id}> role.`);
             await ctx.reply({ embeds: [embed] });
             return;
         }
@@ -73,7 +77,8 @@ export const InRole: Command = {
         const showingNote = membersWithRole.size > 20 ? `\n\n*Showing first 20 of ${membersWithRole.size} members*` : '';
 
         const embed = new EmbedBuilder()
-            .setDescription(
+            .setColor(0x2b2d31)
+        .setDescription(
                 `**Members with** <@&${targetRole.id}>\n\n` +
                 memberList.join('\n') +
                 `\n\n**Total:** ${membersWithRole.size} member${membersWithRole.size === 1 ? '' : 's'}` +
