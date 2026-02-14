@@ -38,8 +38,15 @@ export const Hide: Command = {
             const channelMatch = channelInput.match(/^<#(\d+)>$/);
             const channelId = channelMatch ? channelMatch[1] : channelInput;
 
-            // Try by ID first
+            // Try by ID first (fetch if not in cache)
             let channel = guild.channels.cache.get(channelId);
+            if (!channel && /^\d+$/.test(channelId)) {
+                try {
+                    channel = await guild.channels.fetch(channelId);
+                } catch (e) {
+                    // Channel not found
+                }
+            }
             
             // If not found, try by name
             if (!channel) {
@@ -67,8 +74,19 @@ export const Hide: Command = {
                 }
             }
         } else {
-            const channel = guild.channels.cache.get(ctx.channelId);
-            if (channel?.type === ChannelType.GuildText) {
+            // Get current channel and handle all text-based types
+            let channel = guild.channels.cache.get(ctx.channelId);
+            if (!channel) {
+                try {
+                    channel = await guild.channels.fetch(ctx.channelId);
+                } catch (e) {
+                    // Channel not found
+                }
+            }
+            
+            if (channel?.type === ChannelType.GuildText || 
+                channel?.type === ChannelType.PublicThread ||
+                channel?.type === ChannelType.PrivateThread) {
                 targetChannel = channel as TextChannel;
             }
         }
