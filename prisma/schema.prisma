@@ -536,6 +536,7 @@ model Manual {
   advise        String?
   note_proof    String?
   log_message_id String?
+  reviewed_by   String[] @default([])
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 

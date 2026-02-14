@@ -178,6 +178,55 @@ export class ManualService {
             }
         });
     }
+
+    /**
+     * Add a reviewer to a manual
+     */
+    async addReviewer(id: string, reviewerId: string) {
+        const manual = await db.manual.findUnique({ where: { id } });
+        if (!manual) return null;
+
+        const reviewedBy = manual.reviewed_by || [];
+        if (!reviewedBy.includes(reviewerId)) {
+            reviewedBy.push(reviewerId);
+        }
+
+        return await db.manual.update({
+            where: { id },
+            data: { reviewed_by: reviewedBy }
+        });
+    }
+
+    /**
+     * Copy a manual to another user
+     */
+    async copyManualToUser(
+        originalManualId: string,
+        newTargetId: string
+    ) {
+        const original = await db.manual.findUnique({ where: { id: originalManualId } });
+        if (!original) return null;
+
+        return await db.$transaction(async (tx: Prisma.TransactionClient) => {
+            const manualNumber = await this.getNextManualNumber(tx, original.guild_id);
+
+            const manual = await tx.manual.create({
+                data: {
+                    manual_number: manualNumber,
+                    guild_id: original.guild_id,
+                    target_id: newTargetId,
+                    moderator_id: original.moderator_id,
+                    offense: original.offense,
+                    action: original.action,
+                    advise: original.advise,
+                    note_proof: original.note_proof,
+                    reviewed_by: original.reviewed_by
+                }
+            });
+
+            return { ...manual, manual_number: manualNumber };
+        });
+    }
 }
 
 export const manualService = new ManualService();

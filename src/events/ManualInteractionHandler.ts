@@ -1,4 +1,4 @@
-import { Events, Interaction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, TextChannel, ButtonBuilder, ButtonStyle, Message } from 'discord.js';
+import { Events, Interaction, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, TextChannel, ButtonBuilder, ButtonStyle, Message, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, UserSelectMenuBuilder } from 'discord.js';
 import { client } from '../core/discord';
 import { manualService } from '../services/manual/ManualService';
 import { canPerformAction } from '../util/rolePermissions';
@@ -32,6 +32,13 @@ async function buildManualPageEmbed(
     const moderator = await client.users.fetch(manual.moderator_id).catch(() => null);
     const createdTs = Math.floor(new Date(manual.created_at).getTime() / 1000);
 
+    // Get manual log channel and build link
+    const config = await manualService.getConfig(guildId);
+    let manualLink = `#${manual.manual_number}`;
+    if (config?.log_channel_id && manual.log_message_id) {
+        manualLink = `[Manual #${manual.manual_number}](https://discord.com/channels/${guildId}/${config.log_channel_id}/${manual.log_message_id})`;
+    }
+
     const embed = new EmbedBuilder()
         .setColor(EMBED_COLOR)
         .setAuthor({
@@ -40,7 +47,7 @@ async function buildManualPageEmbed(
         })
         .setDescription(
             `<@${targetId}>\n\n` +
-            `**Manual #${manual.manual_number}**\n\n` +
+            `${manualLink}\n\n` +
             `**Offense:** ${manual.offense}\n` +
             `**Action:** ${manual.action}\n` +
             `**Advise:** ${manual.advise || 'N/A'}\n` +
@@ -79,21 +86,21 @@ function buildPaginationRow(targetId: string, authorId: string, page: number, to
 }
 
 /**
- * Send the manual log to the configured webhook channel
+ * Send the manual log as plain message with moderator username/pfp
  */
 async function sendManualLog(
     guildId: string,
     targetId: string,
     manualData: {
+        id: string;
         manual_number: number;
         offense: string;
         action: string;
         advise: string | null;
         note_proof: string | null;
         moderator_id: string;
-        id: string;
-    },
-    isEdit: boolean = false
+        reviewed_by?: string[];
+    }
 ): Promise<string | null> {
     const config = await manualService.getConfig(guildId);
     if (!config?.log_channel_id) return null;
@@ -120,35 +127,127 @@ async function sendManualLog(
             });
         }
 
-        const createdTs = Math.floor(Date.now() / 1000);
+        // Build reviewed by text
+        let reviewedByText = '';
+        if (manualData.reviewed_by && manualData.reviewed_by.length > 0) {
+            const reviewers = await Promise.all(
+                manualData.reviewed_by.map(id => client.users.fetch(id).catch(() => null))
+            );
+            const reviewerMentions = reviewers.filter(r => r).map(r => `<@${r!.id}>`).join(', ');
+            reviewedByText = `\n\n**Reviewed by:** ${reviewerMentions}`;
+        }
 
-        const embed = new EmbedBuilder()
-            .setColor(EMBED_COLOR)
-            .setDescription(
-                `**Manual #${manualData.manual_number}**\n\n` +
-                `**Username:** ${targetUser?.username || 'Unknown'}\n` +
-                `**User ID:** ${targetId}\n` +
-                `**User Mention:** <@${targetId}>\n\n` +
-                `**Offense:** ${manualData.offense}\n` +
-                `**Action:** ${manualData.action}\n` +
-                `**Advise:** ${manualData.advise || 'N/A'}\n` +
-                `**Note / Proof:** ${manualData.note_proof || 'N/A'}\n\n` +
-                `**${isEdit ? 'Edited' : 'Added'} by:** ${moderator?.username || manualData.moderator_id}\n` +
-                `**Date:** <t:${createdTs}:F>`
-            )
-            .setFooter({ text: `Manual ID: ${manualData.manual_number}` });
+        // Plain message format
+        const content = 
+            `${targetUser?.id || targetId}\n` +
+            `${targetUser?.username || 'Unknown User'}\n` +
+            `<@${targetId}>\n\n` +
+            `• **Offense:** ${manualData.offense}\n` +
+            `• **Action:** ${manualData.action}\n` +
+            `• **Advise:** ${manualData.advise || 'N/A'}\n` +
+            `• **Note/Proof:** ${manualData.note_proof || 'N/A'}${reviewedByText}\n\n` +
+            `ManualId : ${manualData.manual_number} | mod : ${manualData.moderator_id}`;
+
+        // Action buttons
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`manual_addmod_${manualData.id}`)
+                    .setLabel('Add Moderator')
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId(`manual_addmember_${manualData.id}`)
+                    .setLabel('Add Member')
+                    .setStyle(ButtonStyle.Secondary)
+            );
 
         const msg = await webhook.send({
-            username: targetUser?.username || 'Unknown User',
-            avatarURL: targetUser?.displayAvatarURL() || undefined,
-            content: `<@${targetId}>`,
-            embeds: [embed]
+            username: moderator?.username || 'Moderator',
+            avatarURL: moderator?.displayAvatarURL() || undefined,
+            content,
+            components: [row]
         });
 
         return msg.id;
     } catch (err) {
         console.error('Error sending manual log webhook:', err);
         return null;
+    }
+}
+
+/**
+ * Update an existing manual log message
+ */
+async function updateManualLog(
+    guildId: string,
+    messageId: string,
+    targetId: string,
+    manualData: {
+        id: string;
+        manual_number: number;
+        offense: string;
+        action: string;
+        advise: string | null;
+        note_proof: string | null;
+        moderator_id: string;
+        reviewed_by?: string[];
+    }
+): Promise<void> {
+    const config = await manualService.getConfig(guildId);
+    if (!config?.log_channel_id) return;
+
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) return;
+
+    const channel = guild.channels.cache.get(config.log_channel_id);
+    if (!channel || !channel.isTextBased()) return;
+
+    const textChannel = channel as TextChannel;
+    const targetUser = await client.users.fetch(targetId).catch(() => null);
+
+    try {
+        const webhooks = await textChannel.fetchWebhooks();
+        const webhook = webhooks.find(w => w.name === 'Manual Logs');
+        if (!webhook) return;
+
+        // Build reviewed by text
+        let reviewedByText = '';
+        if (manualData.reviewed_by && manualData.reviewed_by.length > 0) {
+            const reviewers = await Promise.all(
+                manualData.reviewed_by.map(id => client.users.fetch(id).catch(() => null))
+            );
+            const reviewerMentions = reviewers.filter(r => r).map(r => `<@${r!.id}>`).join(', ');
+            reviewedByText = `\n\n**Reviewed by:** ${reviewerMentions}`;
+        }
+
+        const content = 
+            `${targetUser?.id || targetId}\n` +
+            `${targetUser?.username || 'Unknown User'}\n` +
+            `<@${targetId}>\n\n` +
+            `• **Offense:** ${manualData.offense}\n` +
+            `• **Action:** ${manualData.action}\n` +
+            `• **Advise:** ${manualData.advise || 'N/A'}\n` +
+            `• **Note/Proof:** ${manualData.note_proof || 'N/A'}${reviewedByText}\n\n` +
+            `ManualId : ${manualData.manual_number} | mod : ${manualData.moderator_id}`;
+
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`manual_addmod_${manualData.id}`)
+                    .setLabel('Add Moderator')
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId(`manual_addmember_${manualData.id}`)
+                    .setLabel('Add Member')
+                    .setStyle(ButtonStyle.Secondary)
+            );
+
+        await webhook.editMessage(messageId, {
+            content,
+            components: [row]
+        });
+    } catch (err) {
+        console.error('Error updating manual log:', err);
     }
 }
 
@@ -349,47 +448,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
                 note_proof: noteProof
             });
 
-            // Edit the original webhook message instead of sending new
+            // Edit the original webhook message
             if (updated.log_message_id) {
-                const config = await manualService.getConfig(interaction.guildId!);
-                if (config?.log_channel_id) {
-                    const guild = client.guilds.cache.get(interaction.guildId!);
-                    const channel = guild?.channels.cache.get(config.log_channel_id);
-                    if (channel && channel.isTextBased()) {
-                        const textChannel = channel as TextChannel;
-                        try {
-                            const webhooks = await textChannel.fetchWebhooks();
-                            const webhook = webhooks.find(w => w.name === 'Manual Logs');
-                            if (webhook) {
-                                const targetUser = await client.users.fetch(updated.target_id).catch(() => null);
-                                const moderator = await client.users.fetch(updated.moderator_id).catch(() => null);
-                                const createdTs = Math.floor(Date.now() / 1000);
-
-                                const logEmbed = new EmbedBuilder()
-                                    .setColor(EMBED_COLOR)
-                                    .setDescription(
-                                        `**Manual #${updated.manual_number}**\n\n` +
-                                        `**Username:** ${targetUser?.username || 'Unknown'}\n` +
-                                        `**User ID:** ${updated.target_id}\n` +
-                                        `**User Mention:** <@${updated.target_id}>\n\n` +
-                                        `**Offense:** ${updated.offense}\n` +
-                                        `**Action:** ${updated.action}\n` +
-                                        `**Advise:** ${updated.advise || 'N/A'}\n` +
-                                        `**Note / Proof:** ${updated.note_proof || 'N/A'}\n\n` +
-                                        `**Edited by:** ${moderator?.username || updated.moderator_id}\n` +
-                                        `**Date:** <t:${createdTs}:F>`
-                                    )
-                                    .setFooter({ text: `Manual ID: ${updated.manual_number}` });
-
-                                await webhook.editMessage(updated.log_message_id, {
-                                    embeds: [logEmbed]
-                                });
-                            }
-                        } catch (err) {
-                            console.error('Error editing manual log webhook:', err);
-                        }
-                    }
-                }
+                await updateManualLog(interaction.guildId!, updated.log_message_id, updated.target_id, updated);
             }
 
             const targetUser = await client.users.fetch(updated.target_id).catch(() => null);
@@ -476,6 +537,101 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             await interaction.update({ embeds: [embed], components: [row] });
         } catch (e: any) {
             console.error('Error handling manual pagination:', e);
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // 6. HANDLE "ADD MODERATOR" BUTTON (from manual log)
+    // ═══════════════════════════════════════════
+    if (interaction.isButton() && interaction.customId.startsWith('manual_addmod_')) {
+        const manualId = interaction.customId.replace('manual_addmod_', '');
+
+        const menu = new UserSelectMenuBuilder()
+            .setCustomId(`manual_selectmod_${manualId}`)
+            .setPlaceholder('Select moderator to add as reviewer')
+            .setMinValues(1)
+            .setMaxValues(1);
+
+        const row = new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(menu);
+
+        await interaction.reply({ content: 'Select a moderator to add as reviewer:', components: [row], ephemeral: true });
+    }
+
+    // ═══════════════════════════════════════════
+    // 7. HANDLE "ADD MEMBER" BUTTON (from manual log)
+    // ═══════════════════════════════════════════
+    if (interaction.isButton() && interaction.customId.startsWith('manual_addmember_')) {
+        const manualId = interaction.customId.replace('manual_addmember_', '');
+
+        const menu = new UserSelectMenuBuilder()
+            .setCustomId(`manual_selectmember_${manualId}`)
+            .setPlaceholder('Select member to copy manual to')
+            .setMinValues(1)
+            .setMaxValues(1);
+
+        const row = new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(menu);
+
+        await interaction.reply({ content: 'Select a member to add the same manual to:', components: [row], ephemeral: true });
+    }
+
+    // ═══════════════════════════════════════════
+    // 8. HANDLE MODERATOR SELECTION (Add reviewer)
+    // ═══════════════════════════════════════════
+    if (interaction.isUserSelectMenu() && interaction.customId.startsWith('manual_selectmod_')) {
+        const manualId = interaction.customId.replace('manual_selectmod_', '');
+        const selectedUserId = interaction.values[0];
+
+        await interaction.deferUpdate();
+
+        try {
+            const updated = await manualService.addReviewer(manualId, selectedUserId);
+            if (!updated) {
+                await interaction.followUp({ content: `${CROSS} Manual not found.`, ephemeral: true });
+                return;
+            }
+
+            // Update webhook message
+            if (updated.log_message_id) {
+                await updateManualLog(interaction.guildId!, updated.log_message_id, updated.target_id, updated);
+            }
+
+            await interaction.editReply({ content: `${TICK} Added <@${selectedUserId}> as reviewer.`, components: [] });
+        } catch (err: any) {
+            console.error('Error adding reviewer:', err);
+            await interaction.followUp({ content: `${CROSS} Failed to add reviewer: ${err.message}`, ephemeral: true });
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // 9. HANDLE MEMBER SELECTION (Copy manual)
+    // ═══════════════════════════════════════════
+    if (interaction.isUserSelectMenu() && interaction.customId.startsWith('manual_selectmember_')) {
+        const originalManualId = interaction.customId.replace('manual_selectmember_', '');
+        const newTargetId = interaction.values[0];
+
+        await interaction.deferUpdate();
+
+        try {
+            const newManual = await manualService.copyManualToUser(originalManualId, newTargetId);
+            if (!newManual) {
+                await interaction.followUp({ content: `${CROSS} Failed to copy manual.`, ephemeral: true });
+                return;
+            }
+
+            // Send new webhook log
+            const logMsgId = await sendManualLog(interaction.guildId!, newTargetId, newManual);
+            if (logMsgId) {
+                await manualService.setLogMessageId(newManual.id, logMsgId);
+            }
+
+            const targetUser = await client.users.fetch(newTargetId).catch(() => null);
+            await interaction.editReply({ 
+                content: `${TICK} Manual #${newManual.manual_number} created for ${targetUser ? `**${targetUser.username}**` : `<@${newTargetId}>`}`, 
+                components: [] 
+            });
+        } catch (err: any) {
+            console.error('Error copying manual:', err);
+            await interaction.followUp({ content: `${CROSS} Failed to copy manual: ${err.message}`, ephemeral: true });
         }
     }
 });
